@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Our Team</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <!-- 後台 Our Team 管理頁主容器 -->
+    <main class="admin-form-page">
+        <!-- 頁面標題與說明 -->
+        <section class="admin-form-header">
+            <h1>Manage Our Team</h1>
+            <p>Add, edit, and update each staff member's position, department, photo, profile link, or profile PDF.</p>
+        </section>
+
+        <!-- 操作成功後顯示訊息 -->
+        {% if success_message %}
+            <p class="success-message">{{ success_message }}</p>
+        {% endif %}
+
+        <!-- Our Team 新增 / 編輯表單
+             如果 editing_staff 有值，代表目前是編輯模式；
+             如果沒有值，代表目前是新增模式。 -->
+        <form method="POST" class="admin-form-card" enctype="multipart/form-data">
+            {% if editing_staff %}
+                <input type="hidden" name="staff_id" value="{{ editing_staff['id'] }}">
+            {% endif %}
+
+            <label for="name_en">Name EN</label>
+            <input
+                type="text"
+                id="name_en"
+                name="name_en"
+                value="{{ editing_staff['name_en'] if editing_staff else '' }}"
+                required
+            >
+
+            <label for="name_th">Name TH</label>
+            <input
+                type="text"
+                id="name_th"
+                name="name_th"
+                value="{{ editing_staff['name_th'] if editing_staff else '' }}"
+                required
+            >
+
+            <label for="position_en">Position EN</label>
+            <input
+                type="text"
+                id="position_en"
+                name="position_en"
+                value="{{ editing_staff['position_en'] if editing_staff else '' }}"
+                placeholder="Leader / Member / Advisor / Researcher"
+            >
+
+            <label for="position_th">Position TH</label>
+            <input
+                type="text"
+                id="position_th"
+                name="position_th"
+                value="{{ editing_staff['position_th'] if editing_staff else '' }}"
+                placeholder="หัวหน้า / สมาชิก / ที่ปรึกษา / นักวิจัย"
+            >
+
+            <label for="department_en">Department / Note EN</label>
+            <input
+                type="text"
+                id="department_en"
+                name="department_en"
+                value="{{ editing_staff['department_en'] if editing_staff else '' }}"
+                placeholder="Department of Industrial Engineering"
+            >
+
+            <label for="department_th">Department / Note TH</label>
+            <input
+                type="text"
+                id="department_th"
+                name="department_th"
+                value="{{ editing_staff['department_th'] if editing_staff else '' }}"
+                placeholder="ภาควิชาวิศวกรรมอุตสาหการ"
+            >
+
+            <label for="photo_file">Photo</label>
+            {% if editing_staff and editing_staff['photo_filename'] %}
+                <p class="admin-current-file">Current photo: {{ editing_staff['photo_filename'] }}</p>
+            {% endif %}
+            <input
+                type="file"
+                id="photo_file"
+                name="photo_file"
+                accept=".jpg,.jpeg,.png,.gif,.webp,image/*"
+            >
+            <p class="admin-form-hint">Upload a JPG, PNG, GIF, or WEBP image. Leave empty when editing to keep the current photo.</p>
+
+            <label for="sort_order">Display Order</label>
+            <input
+                type="number"
+                id="sort_order"
+                name="sort_order"
+                value="{{ editing_staff['sort_order'] if editing_staff else 0 }}"
+                min="0"
+                step="1"
+            >
+
+            <label for="profile_url">Profile URL</label>
+            <input
+                type="text"
+                id="profile_url"
+                name="profile_url"
+                value="{{ editing_staff['profile_url'] if editing_staff else '' }}"
+                placeholder="https://example.com/profile or leave empty when uploading a PDF"
+            >
+
+            <label for="profile_pdf_file">Profile PDF</label>
+            {% if editing_staff and editing_staff['profile_url'] and editing_staff['profile_url']|lower.endswith('.pdf') %}
+                <p class="admin-current-file">Current PDF: {{ editing_staff['profile_url'] }}</p>
+            {% endif %}
+            <input
+                type="file"
+                id="profile_pdf_file"
+                name="profile_pdf_file"
+                accept=".pdf,application/pdf"
+            >
+            <p class="admin-form-hint">If you upload a PDF, it will replace the Profile URL automatically.</p>
+
+            <label for="audio_en_file">Introduction Audio EN File</label>
+            {% if editing_staff and editing_staff['audio_en_url'] %}
+                <p class="admin-current-file">Current EN audio: {{ editing_staff['audio_en_url'] }}</p>
+            {% endif %}
+            <input
+                type="file"
+                id="audio_en_file"
+                name="audio_en_file"
+                accept=".mp3,.m4a,.wav,.ogg,.aac,audio/*"
+            >
+
+            <label for="audio_th_file">Introduction Audio TH File</label>
+            {% if editing_staff and editing_staff['audio_th_url'] %}
+                <p class="admin-current-file">Current TH audio: {{ editing_staff['audio_th_url'] }}</p>
+            {% endif %}
+            <input
+                type="file"
+                id="audio_th_file"
+                name="audio_th_file"
+                accept=".mp3,.m4a,.wav,.ogg,.aac,audio/*"
+            >
+            <p class="admin-form-hint">Upload MP3, M4A, WAV, OGG, or AAC audio. Leave empty when editing to keep the current audio file.</p>
+
+            <div class="admin-form-actions">
+                <button type="submit">{% if editing_staff %}Update Team Member{% else %}Add Team Member{% endif %}</button>
+                {% if editing_staff %}
+                    <a class="secondary-link" href="{{ url_for('admin.staff') }}">Cancel Edit</a>
+                {% else %}
+                    <a class="secondary-link" href="{{ url_for('admin.dashboard') }}">Back to Dashboard</a>
+                {% endif %}
+            </div>
+        </form>
+
+        <!-- Our Team 清單區塊 -->
+        <section class="staff-admin-list">
+            <h2>Current Team List</h2>
+
+            <!-- 逐筆列出目前資料庫內的 staff，讓管理者可以直接編輯或刪除 -->
+            <div class="staff-admin-grid">
+                {% for staff in staff_list %}
+                    <article class="staff-admin-card">
+                        <!-- 這裡直接顯示後台照片預覽，方便管理者確認檔名對應的是不是正確的人物 -->
+                        <div class="staff-admin-photo">
+                            {% if staff['photo_filename'] %}
+                                <img src="{{ url_for('static', filename='uploads/' ~ staff['photo_filename']) }}" alt="{{ staff['name_en'] }}">
+                            {% else %}
+                                <div class="staff-admin-photo-placeholder" aria-hidden="true">No Photo</div>
+                            {% endif %}
+                        </div>
+                        <h3>{{ staff['name_en'] }}</h3>
+                        <p>{{ staff['name_th'] }}</p>
+                        <p>Position EN: {{ staff['position_en'] or '-' }}</p>
+                        <p>Position TH: {{ staff['position_th'] or '-' }}</p>
+                        <p>Department EN: {{ staff['department_en'] or '-' }}</p>
+                        <p>Department TH: {{ staff['department_th'] or '-' }}</p>
+                        <p>Group: {{ staff['staff_group'] }}</p>
+                        <p>Display Order: {{ staff['sort_order'] }}</p>
+                        <p>Photo: {{ staff['photo_filename'] }}</p>
+                        <p>Profile: {{ staff['profile_url'] or '-' }}</p>
+                        <p>Audio EN: {{ staff['audio_en_url'] or '-' }}</p>
+                        <p>Audio TH: {{ staff['audio_th_url'] or '-' }}</p>
+                        <div class="staff-admin-actions">
+                            <a href="{{ url_for('admin.staff', edit_id=staff['id']) }}">Edit</a>
+                            <form method="POST" class="admin-inline-form" onsubmit="return confirm('Delete this team member?');">
+                                <input type="hidden" name="form_action" value="delete_staff">
+                                <input type="hidden" name="delete_staff_id" value="{{ staff['id'] }}">
+                                <button type="submit" class="link-button">Delete</button>
+                            </form>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+</body>
+</html>

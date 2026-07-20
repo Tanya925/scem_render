@@ -1,0 +1,70 @@
+<footer class="site-footer">
+    <section class="site-footer-main">
+        <div class="site-footer-column site-footer-brand-column">
+            <div class="site-footer-brand-top">
+                <div class="site-footer-logo-block">
+                    <div class="site-footer-logo-frame">
+                        <img src="{{ url_for('static', filename='logo/8. SCEM.png') }}" alt="SCEM Logo">
+                    </div>
+                </div>
+
+                <div class="site-footer-brand-copy">
+                    <p>
+                        {% if current_language == "th" %}
+                            หน่วยวิจัยการจัดการ<br>
+                            โซ่อุปทานและวิศวกรรม<br>
+                            มหาวิทยาลัยเชียงใหม่
+                        {% else %}
+                            Supply Chain and<br>
+                            Engineering Management<br>
+                            Research Unit<br>
+                            Chiang Mai University
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="site-footer-column site-footer-contact-column">
+            <div class="site-footer-contact-shell">
+                <h3>{% if current_language == "th" %}ติดต่อ{% else %}Contact{% endif %}</h3>
+
+                <div class="site-footer-contact-intro">
+                    {% if current_language == "th" %}
+                        ติดต่อหน่วยวิจัย SCEM เพื่อสอบถามข้อมูลเพิ่มเติมและติดตามข่าวสารของเรา
+                    {% else %}
+                        Contact SCEM Research Unit for more information and stay connected with our updates.
+                    {% endif %}
+                </div>
+
+                <div class="site-footer-contact">
+                    <div class="site-footer-contact-item">
+                        <span class="site-footer-contact-icon">✉</span>
+                        <span>scem2565@gmail.com</span>
+                    </div>
+
+                    <div class="site-footer-contact-item">
+                        <span class="site-footer-contact-icon">☎</span>
+                        <span>053 944 215 - 322</span>
+                    </div>
+
+                    <div class="site-footer-contact-item">
+                        <span class="site-footer-contact-icon">ⓕ</span>
+                        <a href="https://facebook.com/elscm.cmu" target="_blank" rel="noopener noreferrer">facebook.com/elscm.cmu</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="site-footer-bottom">
+        <p>
+            {% if current_language == "th" %}
+                © 2026 หน่วยวิจัย SCEM มหาวิทยาลัยเชียงใหม่
+            {% else %}
+                © 2026 SCEM Research Unit, Chiang Mai University.
+            {% endif %}
+        </p>
+
+    </section>
+</footer>

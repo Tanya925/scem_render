@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCEM Admin Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <!-- 這是後台登入頁的主容器 -->
+    <main class="admin-login-page">
+        <!-- 顯示登入頁標題，讓使用者知道這裡是後台入口 -->
+        <div class="admin-login-card">
+            <div class="admin-login-header">
+                <a class="back-to-site-link" href="{{ url_for('public.index') }}">Back to Main Site</a>
+                <h1>Admin Login</h1>
+
+                <!-- 顯示目前頁面的簡短說明 -->
+                <p>Please sign in to manage SCEM website content.</p>
+            </div>
+
+            <!-- 如果後端有傳回錯誤訊息，就顯示在表單上方 -->
+            {% if error_message %}
+                <p class="admin-login-error">{{ error_message }}</p>
+            {% endif %}
+
+            <!-- 後台登入表單
+                 method="POST" 代表送出表單時會用 POST 方法
+                 action 省略時，會送回目前這個 /admin/login 網址 -->
+            <form method="POST" class="admin-login-form">
+                <!-- 帳號輸入欄位 -->
+                <div>
+                    <label for="username">Username</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="Enter your username"
+                        required
+                    >
+                </div>
+
+                <!-- 密碼輸入欄位 -->
+                <div>
+                    <label for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        required
+                    >
+                </div>
+
+                <!-- 送出登入表單的按鈕 -->
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

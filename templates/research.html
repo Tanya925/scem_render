@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if current_language == "th" %}โครงการวิจัย{% else %}Research Projects{% endif %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body data-language="{{ current_language }}">
+    {% include "_public_header.html" %}
+
+    <!-- Research 頁主容器 -->
+    <main class="home-page research-page">
+        <section class="hero-section reveal-card research-page-hero">
+            <div class="research-hero-kicker">
+                {% if current_language == "th" %}ภาพรวมงานวิจัย{% else %}Research Overview{% endif %}
+            </div>
+            <h1>
+                {% if current_language == "th" %}
+                    โครงการวิจัย
+                {% else %}
+                    Research Projects
+                {% endif %}
+            </h1>
+            <p class="hero-subtitle">
+                {% if current_language == "th" %}
+                    เรียกดูโครงการวิจัยที่กำลังดำเนินการและโครงการที่เสร็จสิ้นแล้ว แบ่งเป็นสองหมวดหลัก
+                {% else %}
+                    Explore the ongoing and finished research projects of the SCEM Research Unit.
+                {% endif %}
+            </p>
+        </section>
+
+        <section class="research-switcher reveal-card">
+            <div class="research-search-panel">
+                <label for="research-keyword-search">
+                    {% if current_language == "th" %}ค้นหาโครงการวิจัย{% else %}Search Research Projects{% endif %}
+                </label>
+                <input
+                    id="research-keyword-search"
+                    type="search"
+                    data-research-search
+                    placeholder="{% if current_language == 'th' %}ป้อนคำค้นหาเพื่อค้นหาโครงการวิจัย...{% else %}Enter a keyword to search research projects...{% endif %}"
+                    autocomplete="off"
+                >
+            </div>
+
+            <input class="research-tab-input" type="radio" name="research-tab" id="research-tab-ongoing" checked>
+            <input class="research-tab-input" type="radio" name="research-tab" id="research-tab-finished">
+
+            <div class="research-tab-bar" role="tablist" aria-label="Research categories">
+                <label class="research-tab" for="research-tab-ongoing" role="tab">
+                    <span class="research-tab-icon research-tab-icon-clock" aria-hidden="true"></span>
+                    <span>{% if current_language == "th" %}โครงการที่กำลังดำเนินการ{% else %}Ongoing project{% endif %}</span>
+                </label>
+                <label class="research-tab" for="research-tab-finished" role="tab">
+                    <span class="research-tab-icon research-tab-icon-check" aria-hidden="true"></span>
+                    <span>{% if current_language == "th" %}โครงการที่เสร็จสิ้นแล้ว{% else %}Finished project{% endif %}</span>
+                </label>
+            </div>
+
+            <div class="research-panels">
+                <section class="research-panel research-panel-ongoing" data-research-panel>
+                    <h2 class="research-search-section-title">
+                        {% if current_language == "th" %}โครงการที่กำลังดำเนินการ{% else %}Ongoing project{% endif %}
+                    </h2>
+                    {% if research_projects['ongoing'] %}
+                        <ol class="research-ongoing-list">
+                            {% for project in research_projects['ongoing'] %}
+                                <li
+                                    class="research-ongoing-item reveal-card"
+                                    data-research-item
+                                    data-search="{{ (project['title_en'] ~ ' ' ~ project['title_th'] ~ ' ' ~ project['year_en'] ~ ' ' ~ project['year_th'] ~ ' ' ~ project['leader_en'] ~ ' ' ~ project['leader_th'] ~ ' ' ~ project['deputy_en'] ~ ' ' ~ project['deputy_th'] ~ ' ' ~ project['researcher_en'] ~ ' ' ~ project['researcher_th'] ~ ' ' ~ project['engineer_en'] ~ ' ' ~ project['engineer_th'] ~ ' ' ~ project['description_en'] ~ ' ' ~ project['description_th'])|lower|e }}"
+                                    style="--reveal-delay: {{ loop.index0 * 45 }}ms;"
+                                >
+                                    <a class="research-ongoing-link" href="{{ url_for('public.project_detail', project_id=project['id']) }}">
+                                        <span class="research-list-index">{{ "%02d"|format(loop.index) }}</span>
+                                        <span class="research-ongoing-title">{{ field_text(project, 'title') }}</span>
+                                        <span class="research-list-action">{% if current_language == "th" %}ดูรายละเอียด{% else %}View details{% endif %} →</span>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ol>
+                    {% else %}
+                        <p class="empty-text">
+                            {% if current_language == "th" %}
+                                ยังไม่มีโครงการที่กำลังดำเนินการ
+                            {% else %}
+                                No ongoing projects.
+                            {% endif %}
+                        </p>
+                    {% endif %}
+                </section>
+
+                <section class="research-panel research-panel-finished" data-research-panel>
+                    <h2 class="research-search-section-title">
+                        {% if current_language == "th" %}โครงการที่เสร็จสิ้นแล้ว{% else %}Finished project{% endif %}
+                    </h2>
+                    {% if research_projects['finished'] %}
+                        <ol class="research-finished-grid">
+                            {% for project in research_projects['finished'] %}
+                                <li
+                                    class="research-finished-card reveal-card"
+                                    data-research-item
+                                    data-search="{{ (project['title_en'] ~ ' ' ~ project['title_th'] ~ ' ' ~ project['year_en'] ~ ' ' ~ project['year_th'] ~ ' ' ~ project['leader_en'] ~ ' ' ~ project['leader_th'] ~ ' ' ~ project['deputy_en'] ~ ' ' ~ project['deputy_th'] ~ ' ' ~ project['researcher_en'] ~ ' ' ~ project['researcher_th'] ~ ' ' ~ project['engineer_en'] ~ ' ' ~ project['engineer_th'] ~ ' ' ~ project['description_en'] ~ ' ' ~ project['description_th'])|lower|e }}"
+                                    style="--reveal-delay: {{ loop.index0 * 16 }}ms;"
+                                >
+                                    {% set project_year = field_text(project, 'year') %}
+                                    <h3>
+                                        <span>{{ field_text(project, 'title') }}</span>
+                                        {% if project_year %}
+                                            <span class="research-finished-year">{{ project_year }}</span>
+                                        {% endif %}
+                                    </h3>
+                                </li>
+                            {% endfor %}
+                        </ol>
+                    {% else %}
+                        <p class="empty-text">
+                            {% if current_language == "th" %}
+                                ยังไม่มีโครงการที่เสร็จสิ้นแล้ว
+                            {% else %}
+                                No finished projects.
+                            {% endif %}
+                        </p>
+                    {% endif %}
+                </section>
+            </div>
+
+            <p class="empty-text search-empty-text research-search-empty" data-research-empty hidden>
+                {% if current_language == "th" %}
+                    ไม่พบโครงการวิจัยที่ตรงกับคำค้นหา
+                {% else %}
+                    No research projects match your search.
+                {% endif %}
+            </p>
+        </section>
+    </main>
+
+    {% include "_public_footer.html" %}
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/language.js') }}"></script>
+</body>
+</html>

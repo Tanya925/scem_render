@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if current_language == "th" %}ทีมของเรา | SCEM{% else %}Our Team | SCEM{% endif %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body data-language="{{ current_language }}">
+    {% include "_public_header.html" %}
+
+    <!-- 前台 Staff / Researcher 頁主容器 -->
+    <main class="home-page">
+        <!-- 頁面標題區 -->
+        <section class="hero-section reveal-card staff-page-hero">
+            {% set team_total = namespace(value=0) %}
+            {% for section in staff_sections %}
+                {% set team_total.value = team_total.value + section["staff"]|length %}
+            {% endfor %}
+            <div class="staff-page-hero-copy">
+                <div class="staff-page-kicker">
+                    {% if current_language == "th" %}บุคลากร SCEM{% else %}SCEM PEOPLE{% endif %}
+                </div>
+                <h1>
+                    {% if current_language == "th" %}
+                        ทีมของเรา
+                    {% else %}
+                        Our Team
+                    {% endif %}
+                </h1>
+                <p class="hero-subtitle">
+                    {% if current_language == "th" %}
+                        ใช้ตัวกรองเพื่อเลือกดูตามหมวดหมู่หรือหน่วยงาน และเปิดหน้าโปรไฟล์จากการ์ดที่มีลิงก์รายละเอียดได้
+                    {% else %}
+                        Use the filters to browse by position or department, and open a profile page from any card that includes a detail link.
+                    {% endif %}
+                </p>
+            </div>
+
+            <aside class="staff-hero-overview" aria-label="{% if current_language == 'th' %}ภาพรวมทีม{% else %}Team overview{% endif %}">
+                <div class="staff-hero-mark" aria-hidden="true">SCEM</div>
+                <div class="staff-hero-total">
+                    <span>{{ team_total.value }}</span>
+                    <p>{% if current_language == "th" %}สมาชิกทีม{% else %}Team Members{% endif %}</p>
+                </div>
+                <div class="staff-hero-groups">
+                    {% for section in staff_sections %}
+                        <div class="staff-hero-group">
+                            <strong>{{ section["staff"]|length }}</strong>
+                            <span>
+                                {% if current_language == "th" %}
+                                    {{ section["title_th"] }}
+                                {% else %}
+                                    {{ section["title_en"] }}
+                                {% endif %}
+                            </span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </aside>
+
+        </section>
+
+        <section class="staff-list-section">
+            <div class="staff-filter-bar">
+                <div class="staff-filter-field staff-search-field">
+                    <label for="staff-keyword-search">
+                        {% if current_language == "th" %}ค้นหาบุคลากร{% else %}Search Team Member{% endif %}
+                    </label>
+                    <input
+                        id="staff-keyword-search"
+                        type="search"
+                        data-staff-search
+                        placeholder="{% if current_language == 'th' %}ค้นหาชื่อ ตำแหน่ง หรือหน่วยงาน{% else %}Search by name, position, or department{% endif %}"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <div class="staff-filter-field staff-position-filter-field">
+                    <label for="position-filter">
+                        {% if current_language == "th" %}กรองตามตำแหน่ง{% else %}Filter by Position{% endif %}
+                    </label>
+                    <select id="position-filter" data-staff-filter-position>
+                        <option value="all">
+                            {% if current_language == "th" %}ทั้งหมด{% else %}All Positions{% endif %}
+                        </option>
+                        {% for option in filter_options["positions"] %}
+                            <option value="{{ option['value'] }}">
+                                {% if current_language == "th" %}
+                                    {{ option["label_th"] }}
+                                {% else %}
+                                    {{ option["label_en"] }}
+                                {% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="staff-filter-field">
+                    <label for="department-filter">
+                        {% if current_language == "th" %}กรองตามภาควิชา / หน่วยงาน{% else %}Filter by Department{% endif %}
+                    </label>
+                    <select id="department-filter" data-staff-filter-department>
+                        <option value="all">
+                            {% if current_language == "th" %}ทั้งหมด{% else %}All Departments{% endif %}
+                        </option>
+                        {% for option in filter_options["departments"] %}
+                            <option value="{{ option['value'] }}">
+                                {% if current_language == "th" %}
+                                    {{ option["label_th"] }}
+                                {% else %}
+                                    {{ option["label_en"] }}
+                                {% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            {% set has_staff = namespace(value=false) %}
+            {% for section in staff_sections %}
+                {% if section["staff"] %}
+                    {% set has_staff.value = true %}
+                    <section class="staff-directory-section" data-staff-section>
+                        <div class="staff-directory-heading">
+                            <h2>
+                                {% if current_language == "th" %}
+                                    {{ section["title_th"] }}
+                                {% else %}
+                                    {{ section["title_en"] }}
+                                {% endif %}
+                            </h2>
+                        </div>
+
+                        <div class="staff-card-grid">
+                            {% for staff in section["staff"] %}
+                                {% set position_text = field_text(staff, 'position') %}
+                                {% set department_text = field_text(staff, 'department') %}
+                                {% set audio_url = staff['audio_th_url'] if current_language == 'th' else staff['audio_en_url'] %}
+                                <article
+                                    class="public-staff-card {% if staff['profile_url'] %}has-profile-link{% else %}is-static{% endif %} reveal-card"
+                                    data-staff-card
+                                    data-position="{{ (staff['position_en'] or staff['position_th'] or '')|lower }}"
+                                    data-department="{{ (staff['department_en'] or staff['department_th'] or '')|lower }}"
+                                    data-search="{{ (staff['name_en'] ~ ' ' ~ staff['name_th'] ~ ' ' ~ staff['position_en'] ~ ' ' ~ staff['position_th'] ~ ' ' ~ staff['department_en'] ~ ' ' ~ staff['department_th'] ~ ' ' ~ staff['profile_url'])|lower|e }}"
+                                    style="--reveal-delay: {{ loop.index0 * 60 }}ms;"
+                                >
+                                    <div class="public-staff-card-top">
+                                        <span class="public-staff-category">{{ position_text }}</span>
+                                    </div>
+
+                                    <div class="public-staff-photo-shell">
+                                        <div class="public-staff-photo">
+                                            {% if staff['photo_filename'] %}
+                                                <img src="{{ url_for('static', filename='uploads/' ~ staff['photo_filename']) }}" alt="{{ field_text(staff, 'name') }}">
+                                            {% else %}
+                                                <div class="public-staff-photo-placeholder" aria-hidden="true">SCEM</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="public-staff-content">
+                                        <h3>{{ field_text(staff, "name") }}</h3>
+                                        <div class="public-staff-department-wrap">
+                                            <p class="public-staff-department">
+                                                <span class="public-staff-department-icon" aria-hidden="true"></span>
+                                                <span>{{ department_text }}</span>
+                                            </p>
+                                        </div>
+                                        {% if staff['profile_url'] or audio_url %}
+                                            <div class="public-staff-actions{% if not staff['profile_url'] %} public-staff-actions-single{% endif %}">
+                                                {% if staff['profile_url'] %}
+                                                    <a class="public-staff-cta" href="{{ staff['profile_url'] }}" target="_blank">
+                                                        {% if current_language == "th" %}View Profile →{% else %}View Profile →{% endif %}
+                                                    </a>
+                                                {% endif %}
+                                                {% if audio_url %}
+                                                    <button
+                                                        type="button"
+                                                        class="public-staff-audio-button"
+                                                        data-staff-audio-button
+                                                        data-audio-src="{{ audio_url }}"
+                                                        aria-label="{% if current_language == 'th' %}เล่นเสียงแนะนำของ {{ field_text(staff, 'name') }}{% else %}Play introduction audio for {{ field_text(staff, 'name') }}{% endif %}"
+                                                        title="{% if current_language == 'th' %}เล่นเสียง{% else %}Play audio{% endif %}"
+                                                    >
+                                                        <span class="public-staff-audio-icon" aria-hidden="true"></span>
+                                                        <span class="public-staff-audio-label">{% if current_language == "th" %}ฟัง{% else %}Listen{% endif %}</span>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
+            {% endfor %}
+
+            {% if not has_staff.value %}
+                <p class="empty-text">
+                    {% if current_language == "th" %}
+                        ขณะนี้ยังไม่มีข้อมูลบุคลากรที่จัดเตรียมเสร็จสมบูรณ์
+                    {% else %}
+                        No prepared staff cards are available yet.
+                    {% endif %}
+                </p>
+            {% endif %}
+
+        </section>
+
+        <div class="staff-search-empty-wrap" data-staff-empty hidden>
+            <p class="empty-text search-empty-text">
+                {% if current_language == "th" %}
+                    ไม่พบบุคลากรที่ตรงกับคำค้นหา
+                {% else %}
+                    No team members match your search.
+                {% endif %}
+            </p>
+        </div>
+    </main>
+
+    {% include "_public_footer.html" %}
+
+    <script src="{{ url_for('static', filename='js/main.js', v='20260720-4') }}"></script>
+    <script src="{{ url_for('static', filename='js/language.js') }}"></script>
+</body>
+</html>

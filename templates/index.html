@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ field_text(general_info, "page_title") }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body data-language="{{ current_language }}">
+    {% include "_public_header.html" %}
+
+    <main class="home-page home-page-with-admin">
+        <section class="hero-panel home-hero-panel home-hero-soft reveal-card">
+            <div class="hero-copy">
+                <h1>{{ field_text(general_info, "page_title") }}</h1>
+                <p class="hero-subtitle">
+                    {% if current_language == "th" %}
+                        หน่วยวิจัยด้านโลจิสติกส์ การจัดการโซ่อุปทาน และการจัดการวิศวกรรมของมหาวิทยาลัยเชียงใหม่
+                    {% else %}
+                        Supply Chain and Engineering Management Research Unit, Chiang Mai University.
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="hero-logo-panel">
+                <img src="{{ url_for('static', filename='logo/8. SCEM.png') }}" alt="SCEM Logo">
+            </div>
+        </section>
+
+        <section class="content-section single-column home-soft-section reveal-card">
+            <article class="home-section-card home-about-card">
+                <div class="home-section-heading">
+                    <h2 class="home-title-chip">{{ field_text(general_info, "about_title") }}</h2>
+                </div>
+
+                <div class="home-about-layout">
+                    <div class="multiline-content about-copy">{{ field_text(general_info, "about_content") }}</div>
+
+                    <div class="home-about-photo-column">
+                        {% if home_activity_images %}
+                            <div class="about-photo-slider" data-activity-slider>
+                                {% for image in home_activity_images %}
+                                    <figure
+                                        class="about-photo-slide {% if loop.first %}is-active{% endif %}"
+                                        data-activity-slide
+                                    >
+                                        <img src="{{ url_for('static', filename='uploads/' ~ image['filename']) }}" alt="SCEM activity photo">
+                                    </figure>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="empty-text">
+                                {% if current_language == "th" %}
+                                    ยังไม่มีภาพกิจกรรม
+                                {% else %}
+                                    No activity photos have been added yet.
+                                {% endif %}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section class="content-section single-column home-soft-section reveal-card">
+            <article class="home-section-card home-details-card">
+                <div class="home-section-heading">
+                    <h2 class="home-title-chip">
+                    {% if current_language == "th" %}
+                        รายละเอียดและผลงาน
+                    {% else %}
+                        Details and Works
+                    {% endif %}
+                    </h2>
+                </div>
+                <div class="overview-sections overview-grid">
+                    {% for section in format_general_content(field_text(general_info, "content")) %}
+                        <section class="overview-block{% if not loop.first %} overview-block-industrial{% endif %}">
+                            {% if section["title"] %}
+                                <h3><span>{{ section["title"] }}</span></h3>
+                            {% endif %}
+
+                            {% set overview_image = overview_image_for_title(section["title"]) %}
+                            {% if overview_image %}
+                                <figure class="overview-figure{% if loop.first %} overview-figure-strategy{% else %} overview-figure-industrial{% endif %}">
+                                    <img
+                                        src="{{ url_for('static', filename='uploads/' ~ overview_image) }}"
+                                        alt="{{ section['title'] }} infographic"
+                                        class="overview-graphic"
+                                    >
+                                </figure>
+                            {% endif %}
+
+                            {% if section["items"] %}
+                                <ul class="overview-list">
+                                    {% for item in section["items"] %}
+                                        <li>{{ item }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </section>
+                    {% endfor %}
+                </div>
+            </article>
+        </section>
+
+    </main>
+
+    {% include "_public_footer.html" %}
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/language.js') }}"></script>
+</body>
+</html>

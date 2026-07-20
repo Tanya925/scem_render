@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit General Info</title>
+
+    <!-- 載入後台樣式，讓這個編輯頁有一致的後台外觀 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <!-- 後台 General Info 編輯頁的主容器 -->
+    <main class="admin-form-page">
+        <!-- 頁面標題區 -->
+        <section class="admin-form-header">
+            <h1>Edit General Info</h1>
+            <p>Update the homepage title, descriptions, and section headings shown on the public SCEM site.</p>
+        </section>
+
+        <!-- 如果剛剛有成功儲存資料，就顯示成功訊息 -->
+        {% if success_message %}
+            <p class="success-message">{{ success_message }}</p>
+        {% endif %}
+
+        <!-- General Info 編輯表單
+             使用 POST 方法，把欄位送回同一個 /admin/general-info route 做更新 -->
+        <form method="POST" class="admin-form-card">
+            <!-- 首頁英文大標題 -->
+            <label for="page_title_en">Page Title EN</label>
+            <input type="text" id="page_title_en" name="page_title_en" value="{{ general_info['page_title_en'] }}" required>
+
+            <!-- 首頁泰文大標題 -->
+            <label for="page_title_th">Page Title TH</label>
+            <input type="text" id="page_title_th" name="page_title_th" value="{{ general_info['page_title_th'] }}" required>
+
+            <!-- About SCEM 區塊英文標題 -->
+            <label for="about_title_en">About Title EN</label>
+            <input type="text" id="about_title_en" name="about_title_en" value="{{ general_info['about_title_en'] or '' }}">
+
+            <!-- About SCEM 區塊泰文標題 -->
+            <label for="about_title_th">About Title TH</label>
+            <input type="text" id="about_title_th" name="about_title_th" value="{{ general_info['about_title_th'] or '' }}">
+
+            <!-- About SCEM 區塊英文內容 -->
+            <label for="about_content_en">About Content EN</label>
+            <textarea id="about_content_en" name="about_content_en" rows="8">{{ general_info['about_content_en'] or '' }}</textarea>
+
+            <!-- About SCEM 區塊泰文內容 -->
+            <label for="about_content_th">About Content TH</label>
+            <textarea id="about_content_th" name="about_content_th" rows="8">{{ general_info['about_content_th'] or '' }}</textarea>
+
+            <!-- 首頁英文主要內容 -->
+            <label for="content_en">Content EN</label>
+            <textarea id="content_en" name="content_en" rows="14">{{ general_info['content_en'] }}</textarea>
+
+            <!-- 首頁泰文主要內容 -->
+            <label for="content_th">Content TH</label>
+            <textarea id="content_th" name="content_th" rows="14">{{ general_info['content_th'] }}</textarea>
+
+            <!-- 儲存按鈕區 -->
+            <div class="admin-form-actions">
+                <input type="hidden" name="form_action" value="save_text">
+                <button type="submit">Save</button>
+                <a class="secondary-link" href="{{ url_for('admin.dashboard') }}">Back to Dashboard</a>
+            </div>
+        </form>
+
+        <section class="staff-admin-list">
+            <h2>Homepage Activity Images</h2>
+            <p class="dashboard-description">Upload a JPG, PNG, GIF, or WEBP image to add it to the homepage activity gallery.</p>
+
+            <form method="POST" class="admin-form-card" enctype="multipart/form-data">
+                <input type="hidden" name="form_action" value="add_activity_image">
+
+                <label for="activity_image_file">Activity Image</label>
+                <input
+                    type="file"
+                    id="activity_image_file"
+                    name="activity_image_file"
+                    accept=".jpg,.jpeg,.png,.gif,.webp,image/*"
+                    required
+                >
+
+                <div class="admin-form-actions">
+                    <button type="submit">Add Activity Image</button>
+                </div>
+            </form>
+
+            <div class="staff-admin-grid">
+                {% for image in activity_images %}
+                    <article class="staff-admin-card">
+                        <div class="staff-admin-photo">
+                            <img src="{{ url_for('static', filename='uploads/' ~ image['filename']) }}" alt="{{ image['filename'] }}">
+                        </div>
+                        <h3>{{ image['filename'] }}</h3>
+
+                        <form method="POST" class="admin-inline-form">
+                            <input type="hidden" name="form_action" value="delete_activity_image">
+                            <input type="hidden" name="image_id" value="{{ image['id'] }}">
+                            <div class="staff-admin-actions">
+                                <button type="submit" class="link-button">Delete</button>
+                            </div>
+                        </form>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+</body>
+</html>

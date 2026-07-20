@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Projects</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <!-- 後台 Projects 管理頁主容器 -->
+    <main class="admin-form-page">
+        <section class="admin-form-header">
+            <h1>Manage Projects</h1>
+            <p>Create, edit, and delete research projects. Ongoing projects can store leader, deputy, researcher, engineer, and description fields in both languages.</p>
+            <p class="admin-form-hint">Finished projects only need year and title.</p>
+        </section>
+
+        {% if success_message %}
+            <p class="success-message">{{ success_message }}</p>
+        {% endif %}
+
+        <!-- Project 新增 / 編輯表單 -->
+        <form method="POST" class="admin-form-card">
+            {% if editing_project %}
+                <input type="hidden" name="project_id" value="{{ editing_project['id'] }}">
+            {% endif %}
+
+            <div class="admin-form-grid">
+                <div>
+                    <label for="project_type">Project Type</label>
+                    <select id="project_type" name="project_type">
+                        <option value="ongoing" {% if not editing_project or editing_project['project_type'] == 'ongoing' %}selected{% endif %}>Ongoing</option>
+                        <option value="finished" {% if editing_project and editing_project['project_type'] == 'finished' %}selected{% endif %}>Finished</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="year_en">Finished Year EN</label>
+                    <input type="text" id="year_en" name="year_en" value="{{ editing_project['year_en'] if editing_project else '' }}">
+                </div>
+                <div>
+                    <label for="year_th">Finished Year TH</label>
+                    <input type="text" id="year_th" name="year_th" value="{{ editing_project['year_th'] if editing_project else '' }}">
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="title_en">Project Title EN</label>
+                    <input type="text" id="title_en" name="title_en" value="{{ editing_project['title_en'] if editing_project else '' }}" required>
+                </div>
+                <div>
+                    <label for="title_th">Project Title TH</label>
+                    <input type="text" id="title_th" name="title_th" value="{{ editing_project['title_th'] if editing_project else '' }}" required>
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="leader_en">Project Leader EN</label>
+                    <input type="text" id="leader_en" name="leader_en" value="{{ editing_project['leader_en'] if editing_project else '' }}">
+                </div>
+                <div>
+                    <label for="leader_th">Project Leader TH</label>
+                    <input type="text" id="leader_th" name="leader_th" value="{{ editing_project['leader_th'] if editing_project else '' }}">
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="deputy_en">Deputy Project Leader EN</label>
+                    <input type="text" id="deputy_en" name="deputy_en" value="{{ editing_project['deputy_en'] if editing_project else '' }}">
+                </div>
+                <div>
+                    <label for="deputy_th">Deputy Project Leader TH</label>
+                    <input type="text" id="deputy_th" name="deputy_th" value="{{ editing_project['deputy_th'] if editing_project else '' }}">
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="researcher_en">Researcher EN</label>
+                    <input type="text" id="researcher_en" name="researcher_en" value="{{ editing_project['researcher_en'] if editing_project else '' }}">
+                </div>
+                <div>
+                    <label for="researcher_th">Researcher TH</label>
+                    <input type="text" id="researcher_th" name="researcher_th" value="{{ editing_project['researcher_th'] if editing_project else '' }}">
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="engineer_en">Project Engineer EN</label>
+                    <input type="text" id="engineer_en" name="engineer_en" value="{{ editing_project['engineer_en'] if editing_project else '' }}">
+                </div>
+                <div>
+                    <label for="engineer_th">Project Engineer TH</label>
+                    <input type="text" id="engineer_th" name="engineer_th" value="{{ editing_project['engineer_th'] if editing_project else '' }}">
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="description_en">Project Description EN</label>
+                    <textarea id="description_en" name="description_en" rows="8">{{ editing_project['description_en'] if editing_project else '' }}</textarea>
+                </div>
+                <div>
+                    <label for="description_th">Project Description TH</label>
+                    <textarea id="description_th" name="description_th" rows="8">{{ editing_project['description_th'] if editing_project else '' }}</textarea>
+                </div>
+            </div>
+
+            <div class="admin-form-actions">
+                <button type="submit">{% if editing_project %}Update Project{% else %}Add Project{% endif %}</button>
+                {% if editing_project %}
+                    <a class="secondary-link" href="{{ url_for('admin.projects') }}">Cancel Edit</a>
+                {% else %}
+                    <a class="secondary-link" href="{{ url_for('admin.dashboard') }}">Back to Dashboard</a>
+                {% endif %}
+            </div>
+        </form>
+
+        <!-- 後台 project 清單 -->
+        <section class="staff-admin-list">
+            <h2>Current Project List</h2>
+            <div class="staff-admin-grid">
+                {% for project in project_list %}
+                    <article class="staff-admin-card">
+                        <div class="project-admin-topline">
+                            <span class="project-admin-type {% if project['project_type'] == 'ongoing' %}ongoing-pill{% else %}finished-pill{% endif %}">{{ project['project_type']|capitalize }}</span>
+                            <span class="project-admin-year">{{ project['year_en'] or '-' }}</span>
+                        </div>
+                        <h3>{{ project['title_en'] }}</h3>
+                        {% if project['project_type'] == 'ongoing' and project['leader_en'] %}
+                            <p>Leader: {{ project['leader_en'] }}</p>
+                        {% endif %}
+                        <div class="staff-admin-actions">
+                            <a href="{{ url_for('admin.projects', edit_id=project['id']) }}">Edit</a>
+                            <form method="POST" class="admin-inline-form" onsubmit="return confirm('Delete this project?');">
+                                <input type="hidden" name="form_action" value="delete_project">
+                                <input type="hidden" name="delete_project_id" value="{{ project['id'] }}">
+                                <button type="submit" class="link-button">Delete</button>
+                            </form>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+</body>
+</html>

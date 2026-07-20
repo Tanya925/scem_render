@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ field_text(project, "title") }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body data-language="{{ current_language }}">
+    {% include "_public_header.html" %}
+
+    <!-- 單一專案詳細頁主容器 -->
+    <main class="home-page project-detail-page">
+        <section class="hero-section reveal-card project-detail-hero">
+            <div class="project-detail-topline">
+                <a class="back-link project-detail-back" href="{{ url_for('public.research') }}">
+                    {% if current_language == "th" %}
+                        ← กลับไปหน้าโครงการวิจัย
+                    {% else %}
+                        ← Back to Research
+                    {% endif %}
+                </a>
+            </div>
+            {% if field_text(project, "year") %}
+                <div class="project-detail-meta">
+                    <span class="research-status-pill ongoing-pill">{{ field_text(project, "year") }}</span>
+                </div>
+            {% endif %}
+            <h1>{{ field_text(project, "title") }}</h1>
+        </section>
+
+        <section class="reveal-card project-detail-card">
+            <div class="project-detail-section-heading">
+                <span>{% if current_language == "th" %}Project Team{% else %}Project Team{% endif %}</span>
+            </div>
+
+            <div class="research-detail-grid project-detail-team-grid">
+                {% if field_text(project, 'leader') %}
+                    <div class="research-detail-block project-person-card">
+                        <span class="project-photo-mark" aria-hidden="true">
+                            <span class="project-photo-crop">
+                                {% if project_team_profiles['leader'] and project_team_profiles['leader']['photo_filename'] %}
+                                    <img src="{{ url_for('static', filename='uploads/' ~ project_team_profiles['leader']['photo_filename']) }}" alt="">
+                                {% else %}
+                                    <span class="project-photo-placeholder"></span>
+                                {% endif %}
+                            </span>
+                        </span>
+                        <div class="project-person-copy">
+                            <h3>{% if current_language == "th" %}Project Leader{% else %}Project Leader{% endif %}</h3>
+                            <p>{{ field_text(project, 'leader') }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if field_text(project, 'deputy') %}
+                    <div class="research-detail-block project-person-card">
+                        <span class="project-photo-mark" aria-hidden="true">
+                            <span class="project-photo-crop">
+                                {% if project_team_profiles['deputy'] and project_team_profiles['deputy']['photo_filename'] %}
+                                    <img src="{{ url_for('static', filename='uploads/' ~ project_team_profiles['deputy']['photo_filename']) }}" alt="">
+                                {% else %}
+                                    <span class="project-photo-placeholder"></span>
+                                {% endif %}
+                            </span>
+                        </span>
+                        <div class="project-person-copy">
+                            <h3>{% if current_language == "th" %}Deputy Project Leader{% else %}Deputy Project Leader{% endif %}</h3>
+                            <p>{{ field_text(project, 'deputy') }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if field_text(project, 'researcher') %}
+                    <div class="research-detail-block project-person-card">
+                        <span class="project-photo-mark" aria-hidden="true">
+                            <span class="project-photo-crop">
+                                {% if project_team_profiles['researcher'] and project_team_profiles['researcher']['photo_filename'] %}
+                                    <img src="{{ url_for('static', filename='uploads/' ~ project_team_profiles['researcher']['photo_filename']) }}" alt="">
+                                {% else %}
+                                    <span class="project-photo-placeholder"></span>
+                                {% endif %}
+                            </span>
+                        </span>
+                        <div class="project-person-copy">
+                            <h3>{% if current_language == "th" %}Researcher{% else %}Researcher{% endif %}</h3>
+                            <p>{{ field_text(project, 'researcher') }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if field_text(project, 'engineer') %}
+                    <div class="research-detail-block project-person-card">
+                        <span class="project-photo-mark" aria-hidden="true">
+                            <span class="project-photo-crop">
+                                {% if project_team_profiles['engineer'] and project_team_profiles['engineer']['photo_filename'] %}
+                                    <img src="{{ url_for('static', filename='uploads/' ~ project_team_profiles['engineer']['photo_filename']) }}" alt="">
+                                {% else %}
+                                    <span class="project-photo-placeholder"></span>
+                                {% endif %}
+                            </span>
+                        </span>
+                        <div class="project-person-copy">
+                            <h3>{% if current_language == "th" %}Project Engineer{% else %}Project Engineer{% endif %}</h3>
+                            <p>{{ field_text(project, 'engineer') }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if field_text(project, "description") %}
+                <div class="project-detail-section-heading project-description-heading">
+                    <span>{% if current_language == "th" %}Project Description{% else %}Project Description{% endif %}</span>
+                </div>
+                <div class="research-detail-description project-description-card">
+                    <div class="multiline-content">{{ field_text(project, "description") }}</div>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+
+    {% include "_public_footer.html" %}
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/language.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,455 @@
+/* 後台頁面整體背景與基本字體設定 */
+body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #f4f6fb;
+    color: #1f2937;
+}
+
+/* 後台登入頁外層容器 */
+.admin-login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+}
+
+/* 後台登入卡片 */
+.admin-login-card {
+    width: min(100%, 460px);
+    padding: 28px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+}
+
+/* 後台登入頁標題區 */
+.admin-login-header {
+    margin-bottom: 20px;
+}
+
+/* 回到前台首頁的按鈕 */
+.back-to-site-link {
+    display: inline-block;
+    margin-bottom: 18px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: #111827;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.back-to-site-link:hover {
+    background: #000000;
+}
+
+/* 後台登入頁主標題 */
+.admin-login-header h1 {
+    margin: 0 0 10px;
+    font-size: 2rem;
+}
+
+/* 後台登入頁說明文字 */
+.admin-login-header p {
+    margin: 0;
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+/* 後台登入錯誤訊息 */
+.admin-login-error {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-weight: 600;
+}
+
+/* 後台登入表單 */
+.admin-login-form {
+    display: grid;
+    gap: 14px;
+}
+
+/* 後台登入表單標籤 */
+.admin-login-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+/* 後台登入表單欄位 */
+.admin-login-form input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    font: inherit;
+    box-sizing: border-box;
+}
+
+/* 後台登入送出按鈕 */
+.admin-login-form button {
+    margin-top: 6px;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 12px;
+    background: #b91c1c;
+    color: #ffffff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-login-form button:hover {
+    background: #991b1b;
+}
+
+/* 後台首頁外層容器，控制整頁寬度與留白 */
+.dashboard-page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 24px;
+}
+
+/* 後台標題區塊下方留白，讓內容層次更清楚 */
+.dashboard-header {
+    margin-bottom: 32px;
+}
+
+/* 後台主標題樣式 */
+.dashboard-header h1 {
+    margin: 0 0 12px;
+    font-size: 2.25rem;
+}
+
+/* 顯示登入者名稱的文字樣式 */
+.dashboard-welcome {
+    margin: 0 0 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #b91c1c;
+}
+
+/* 頁面說明文字樣式 */
+.dashboard-description {
+    margin: 0;
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+/* 三個管理入口的卡片區塊版面 */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+/* 單一管理卡片樣式 */
+.dashboard-card {
+    display: block;
+    padding: 24px;
+    border-radius: 16px;
+    background: #ffffff;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    border: 1px solid #e5e7eb;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* 滑鼠移到卡片上時，讓卡片微微浮起，增加可點擊感 */
+.dashboard-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.12);
+}
+
+/* 卡片標題樣式 */
+.dashboard-card h2 {
+    margin: 0 0 10px;
+    font-size: 1.25rem;
+}
+
+/* 卡片說明文字樣式 */
+.dashboard-card p {
+    margin: 0;
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+/* 登出區塊與上方內容拉開距離 */
+.dashboard-footer {
+    margin-top: 32px;
+}
+
+/* 登出按鈕樣式 */
+.logout-link {
+    display: inline-block;
+    padding: 12px 18px;
+    border-radius: 10px;
+    background: #111827;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+/* 滑鼠移到登出按鈕時，稍微加深顏色 */
+.logout-link:hover {
+    background: #000000;
+}
+
+/* 通用的後台表單頁容器，控制寬度與頁面留白 */
+.admin-form-page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 24px 64px;
+}
+
+/* 後台表單頁標題區塊 */
+.admin-form-header {
+    margin-bottom: 24px;
+}
+
+/* 後台表單頁標題 */
+.admin-form-header h1 {
+    margin: 0 0 12px;
+    font-size: 2rem;
+}
+
+/* 後台表單頁說明文字 */
+.admin-form-header p {
+    margin: 0;
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+.admin-form-hint {
+    margin-top: 8px !important;
+    font-size: 0.92rem;
+    color: #6b7280 !important;
+}
+
+.admin-current-file {
+    margin: -4px 0 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.admin-form-grid {
+    display: grid;
+    gap: 14px;
+}
+
+.admin-form-grid-two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-form-grid textarea {
+    min-height: 120px;
+}
+
+/* 成功訊息樣式，儲存完成後顯示給管理者看 */
+.success-message {
+    margin: 0 0 20px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #dcfce7;
+    color: #166534;
+    font-weight: 600;
+}
+
+/* 後台編輯表單卡片 */
+.admin-form-card {
+    display: grid;
+    gap: 12px;
+    padding: 24px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+/* 後台表單標籤樣式 */
+.admin-form-card label {
+    font-weight: 600;
+}
+
+/* 後台文字輸入框與文字區域共用樣式 */
+.admin-form-card input,
+.admin-form-card textarea,
+.admin-form-card select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font: inherit;
+    box-sizing: border-box;
+}
+
+/* 讓 textarea 可直向調整高度 */
+.admin-form-card textarea {
+    resize: vertical;
+    min-height: 160px;
+}
+
+/* 後台表單底部操作按鈕區 */
+.admin-form-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 8px;
+}
+
+/* 後台主要送出按鈕 */
+.admin-form-actions button {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 10px;
+    background: #b91c1c;
+    color: #ffffff;
+    font: inherit;
+    cursor: pointer;
+}
+
+/* 滑鼠移到主要按鈕上時稍微加深 */
+.admin-form-actions button:hover {
+    background: #991b1b;
+}
+
+/* 次要連結按鈕，例如回到 Dashboard */
+.secondary-link {
+    color: #1f2937;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+/* Staff 管理頁清單區塊，與上方表單拉開距離 */
+.staff-admin-list {
+    margin-top: 32px;
+}
+
+/* Staff 管理頁次標題 */
+.staff-admin-list h2 {
+    margin: 0 0 16px;
+}
+
+/* 後台 staff 卡片清單採格狀排列 */
+.staff-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 220px));
+    gap: 20px;
+}
+
+/* 單一後台 staff 卡片 */
+.staff-admin-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    display: flex;
+    flex-direction: column;
+}
+
+/* 後台 staff 卡片標題 */
+.staff-admin-card h3 {
+    margin: 0 0 10px;
+    font-size: 1.1rem;
+}
+
+.project-admin-topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.project-admin-type,
+.project-admin-year {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.project-admin-year {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+/* 後台 staff 卡片文字 */
+.staff-admin-card p {
+    margin: 0 0 8px;
+    color: #4b5563;
+    line-height: 1.5;
+}
+
+/* 後台照片預覽容器，讓管理者在清單中直接看到人物照片 */
+.staff-admin-photo {
+    margin-bottom: 12px;
+    border-radius: 18px;
+    overflow: hidden;
+    aspect-ratio: 3 / 4;
+}
+
+.staff-admin-photo-placeholder {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(180deg, #ffffff 0%, #f3f4f6 100%);
+    color: #6b7280;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+/* 後台照片預覽圖片 */
+.staff-admin-photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+}
+
+/* 後台 staff 卡片操作連結區 */
+.staff-admin-actions {
+    display: flex;
+    gap: 14px;
+    margin-top: 12px;
+}
+
+/* 後台 staff 卡片操作連結 */
+.staff-admin-actions a {
+    color: #b91c1c;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.admin-inline-form {
+    margin-top: auto;
+}
+
+.link-button {
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #b91c1c;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}

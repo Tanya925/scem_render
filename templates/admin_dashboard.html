@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCEM Admin Dashboard</title>
+
+    <!-- 載入後台專用樣式，讓 Dashboard 至少有清楚的排版與按鈕外觀 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <!-- 後台首頁最外層容器 -->
+    <main class="dashboard-page">
+        <!-- 頁面上方的標題區 -->
+        <section class="dashboard-header">
+            <!-- 後台主標題 -->
+            <h1>Dashboard</h1>
+
+            <!-- 顯示目前登入中的管理員帳號 -->
+            <p class="dashboard-welcome">
+                Welcome, {{ admin_username }}
+            </p>
+
+            <!-- 顯示這一頁的用途說明 -->
+            <p class="dashboard-description">
+                Please choose a section below to manage SCEM website content.
+            </p>
+        </section>
+
+        <!-- 管理入口區塊
+             這裡先放三個最主要的後台入口，之後管理者會從這裡進到各自的編輯頁面 -->
+        <section class="dashboard-grid">
+
+            <!-- General Info 管理入口 -->
+            <a class="dashboard-card" href="{{ url_for('admin.general_info') }}">
+                <h2>Edit General Info</h2>
+                <p>Update the main page title, homepage content, and section headings.</p>
+            </a>
+
+            <!-- Staff 管理入口 -->
+            <!-- 如果點選的話，會導向到 /admin/staff -->
+            <a class="dashboard-card" href="{{ url_for('admin.staff') }}">
+                <h2>Manage Staff</h2>
+                <p>Add, edit, delete, and arrange professors or researchers shown on the site.</p>
+            </a>
+
+            <!-- Projects 管理入口 -->
+            <!-- 如果點選的話，會導向到 /admin/projects -->
+            <a class="dashboard-card" href="{{ url_for('admin.projects') }}">
+                <h2>Manage Projects</h2>
+                <p>Maintain ongoing and finished research projects, including their details.</p>
+            </a>
+        </section>
+
+        <!-- 頁面下方的登出操作區 -->
+        <section class="dashboard-footer">
+            <!-- 登出按鈕會把使用者帶到 /admin/logout，並清除目前登入狀態 -->
+            <a class="logout-link" href="{{ url_for('auth.logout') }}">Logout</a>
+        </section>
+    </main>
+</body>
+</html>
