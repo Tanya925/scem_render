@@ -183,6 +183,10 @@ STAFF_NAME_PREFIXES = (
     "associate",
     "asst",
     "assistant",
+    "miss",
+    "mr",
+    "mrs",
+    "ms",
     "prof",
     "professor",
     "dr",
@@ -423,6 +427,44 @@ def attach_staff_audio_urls(staff_rows):
     return enriched_staff_rows
 
 
+def sync_staff_audio_urls_in_db(connection):
+    audio_lookup_en = build_staff_audio_lookup("en")
+    audio_lookup_th = build_staff_audio_lookup("th")
+    staff_rows = connection.execute(
+        "SELECT id, name_en, audio_en_url, audio_th_url FROM staff"
+    ).fetchall()
+
+    for staff in staff_rows:
+        normalized_name = normalize_staff_audio_name(staff["name_en"])
+        resolved_audio_en_url = ""
+        resolved_audio_th_url = ""
+
+        if normalized_name:
+            resolved_audio_en_url = audio_lookup_en.get(normalized_name, "")
+            resolved_audio_th_url = audio_lookup_th.get(normalized_name, "")
+
+        if not resolved_audio_en_url:
+            resolved_audio_en_url = resolve_existing_audio_url(staff["audio_en_url"])
+
+        if not resolved_audio_th_url:
+            resolved_audio_th_url = resolve_existing_audio_url(staff["audio_th_url"])
+
+        connection.execute(
+            """
+            UPDATE staff
+            SET
+                audio_en_url = ?,
+                audio_th_url = ?
+            WHERE id = ?
+            """,
+            (
+                resolved_audio_en_url,
+                resolved_audio_th_url,
+                staff["id"],
+            )
+        )
+
+
 # 根據 position 自動對應首頁要使用的 staff_group。
 # 目前規則：
 # Leader / Member -> professor
@@ -560,6 +602,7 @@ def ensure_staff_directory_columns():
         """
     )
 
+    sync_staff_audio_urls_in_db(connection)
     connection.commit()
     connection.close()
 
