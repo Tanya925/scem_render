@@ -32,7 +32,7 @@
 
         <section class="reveal-card project-detail-card">
             <div class="project-detail-section-heading">
-                <span>{% if current_language == "th" %}Project Team{% else %}Project Team{% endif %}</span>
+                <span>{% if current_language == "th" %}ทีมโครงการ{% else %}Project Team{% endif %}</span>
             </div>
 
             <div class="research-detail-grid project-detail-team-grid">
@@ -48,7 +48,7 @@
                             </span>
                         </span>
                         <div class="project-person-copy">
-                            <h3>{% if current_language == "th" %}Project Leader{% else %}Project Leader{% endif %}</h3>
+                            <h3>{% if current_language == "th" %}หัวหน้าโครงการ{% else %}Project Leader{% endif %}</h3>
                             <p>{{ field_text(project, 'leader') }}</p>
                         </div>
                     </div>
@@ -65,7 +65,7 @@
                             </span>
                         </span>
                         <div class="project-person-copy">
-                            <h3>{% if current_language == "th" %}Deputy Project Leader{% else %}Deputy Project Leader{% endif %}</h3>
+                            <h3>{% if current_language == "th" %}รองหัวหน้าโครงการ{% else %}Deputy Project Leader{% endif %}</h3>
                             <p>{{ field_text(project, 'deputy') }}</p>
                         </div>
                     </div>
@@ -82,7 +82,7 @@
                             </span>
                         </span>
                         <div class="project-person-copy">
-                            <h3>{% if current_language == "th" %}Researcher{% else %}Researcher{% endif %}</h3>
+                            <h3>{% if current_language == "th" %}นักวิจัย{% else %}Researcher{% endif %}</h3>
                             <p>{{ field_text(project, 'researcher') }}</p>
                         </div>
                     </div>
@@ -99,7 +99,7 @@
                             </span>
                         </span>
                         <div class="project-person-copy">
-                            <h3>{% if current_language == "th" %}Project Engineer{% else %}Project Engineer{% endif %}</h3>
+                            <h3>{% if current_language == "th" %}วิศวกรโครงการ{% else %}Project Engineer{% endif %}</h3>
                             <p>{{ field_text(project, 'engineer') }}</p>
                         </div>
                     </div>
@@ -108,7 +108,7 @@
 
             {% if field_text(project, "description") %}
                 <div class="project-detail-section-heading project-description-heading">
-                    <span>{% if current_language == "th" %}Project Description{% else %}Project Description{% endif %}</span>
+                    <span>{% if current_language == "th" %}รายละเอียดโครงการ{% else %}Project Description{% endif %}</span>
                 </div>
                 <div class="research-detail-description project-description-card">
                     <div class="multiline-content">{{ field_text(project, "description") }}</div>

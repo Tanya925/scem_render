@@ -136,7 +136,7 @@ DEFAULT_STAFF = [
     },
     {
         "name_en": "Assoc. Prof. Dr. Sermkiat Jomjunyong",
-        "name_th": "รองศาสตราจารย์ ดร. เสริมเกียรติ จอมจันทร์ยอง",
+        "name_th": "รองศาสตราจารย์ ดร.เสริมเกียรติ จอมจันทร์ยอง",
         "position_en": "",
         "position_th": "",
         "department_en": "",
@@ -147,6 +147,20 @@ DEFAULT_STAFF = [
         "profile_url": "",
         "audio_en_url": "",
         "audio_th_url": "",
+    },
+    {
+        "name_en": "Prim Fongsamootr",
+        "name_th": "พริม ฟองสมุทร",
+        "position_en": "Member",
+        "position_th": "สมาชิก",
+        "department_en": "Department of Industrial Engineering",
+        "department_th": "ภาควิชาวิศวกรรมอุตสาหการ",
+        "staff_group": "professor",
+        "sort_order": 13,
+        "photo_filename": "M13.png",
+        "profile_url": "/static/cv/CV_Prim Fongsamootr.pdf",
+        "audio_en_url": "/static/audio/EN/EN_Prim Fongsamootr.mp3",
+        "audio_th_url": "/static/audio/TH/TH_Prim Fongsamootr.mp3",
     },
 ]
 
@@ -500,23 +514,29 @@ def ensure_staff_directory_columns():
             """
             UPDATE staff
             SET
+                name_th = COALESCE(NULLIF(name_th, ''), ?),
                 position_en = COALESCE(NULLIF(position_en, ''), ?),
                 position_th = COALESCE(NULLIF(position_th, ''), ?),
                 department_en = COALESCE(NULLIF(department_en, ''), ?),
                 department_th = COALESCE(NULLIF(department_th, ''), ?),
                 staff_group = COALESCE(NULLIF(staff_group, ''), ?),
                 sort_order = CASE WHEN COALESCE(sort_order, 0) = 0 THEN ? ELSE sort_order END,
+                photo_filename = COALESCE(NULLIF(photo_filename, ''), ?),
+                profile_url = COALESCE(NULLIF(profile_url, ''), ?),
                 audio_en_url = COALESCE(NULLIF(audio_en_url, ''), ?),
                 audio_th_url = COALESCE(NULLIF(audio_th_url, ''), ?)
             WHERE name_en = ?
             """,
             (
+                staff["name_th"],
                 staff["position_en"],
                 staff["position_th"],
                 staff["department_en"],
                 staff["department_th"],
                 derive_staff_group(staff["position_en"], staff["position_th"]),
                 staff.get("sort_order", 0),
+                staff.get("photo_filename", ""),
+                staff.get("profile_url", ""),
                 staff.get("audio_en_url", ""),
                 staff.get("audio_th_url", ""),
                 staff["name_en"],
@@ -774,46 +794,49 @@ def ensure_default_staff():
 
     connection = get_db_connection()
 
-    staff_count = connection.execute(
-        "SELECT COUNT(*) AS total FROM staff"
-    ).fetchone()["total"]
+    for staff in DEFAULT_STAFF:
+        existing_staff = connection.execute(
+            "SELECT id FROM staff WHERE name_en = ?",
+            (staff["name_en"],)
+        ).fetchone()
 
-    if staff_count == 0:
-        for staff in DEFAULT_STAFF:
-            connection.execute(
-                """
-                INSERT INTO staff (
-                    name_en,
-                    name_th,
-                    position_en,
-                    position_th,
-                    department_en,
-                    department_th,
-                    staff_group,
-                    sort_order,
-                    photo_filename,
-                    profile_url,
-                    audio_en_url,
-                    audio_th_url
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    staff["name_en"],
-                    staff["name_th"],
-                    staff["position_en"],
-                    staff["position_th"],
-                    staff["department_en"],
-                    staff["department_th"],
-                    staff["staff_group"],
-                    staff.get("sort_order", 0),
-                    staff["photo_filename"],
-                    staff["profile_url"],
-                    staff.get("audio_en_url", ""),
-                    staff.get("audio_th_url", ""),
-                )
+        if existing_staff is not None:
+            continue
+
+        connection.execute(
+            """
+            INSERT INTO staff (
+                name_en,
+                name_th,
+                position_en,
+                position_th,
+                department_en,
+                department_th,
+                staff_group,
+                sort_order,
+                photo_filename,
+                profile_url,
+                audio_en_url,
+                audio_th_url
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                staff["name_en"],
+                staff["name_th"],
+                staff["position_en"],
+                staff["position_th"],
+                staff["department_en"],
+                staff["department_th"],
+                staff["staff_group"],
+                staff.get("sort_order", 0),
+                staff["photo_filename"],
+                staff["profile_url"],
+                staff.get("audio_en_url", ""),
+                staff.get("audio_th_url", ""),
             )
+        )
 
-        connection.commit()
+    connection.commit()
 
     connection.close()
 

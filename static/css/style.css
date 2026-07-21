@@ -1520,7 +1520,7 @@ a {
     transform: translateX(-50%);
     width: max-content;
     max-width: calc(100% - 24px);
-    margin-top: 2px;
+    margin-top: -3px;
 }
 
 .public-staff-department-wrap.is-multiline {
@@ -1626,6 +1626,15 @@ a {
 
 .public-staff-actions-single {
     max-width: 100%;
+}
+
+.public-staff-note {
+    margin: 2px auto 0;
+    color: #7e2d26;
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: center;
 }
 
 .public-staff-card.has-profile-link:hover .public-staff-cta {

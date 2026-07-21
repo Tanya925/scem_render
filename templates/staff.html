@@ -172,7 +172,7 @@
                                             <div class="public-staff-actions{% if not staff['profile_url'] %} public-staff-actions-single{% endif %}">
                                                 {% if staff['profile_url'] %}
                                                     <a class="public-staff-cta" href="{{ staff['profile_url'] }}" target="_blank">
-                                                        {% if current_language == "th" %}View Profile →{% else %}View Profile →{% endif %}
+                                                        {% if current_language == "th" %}ดูโปรไฟล์ →{% else %}View Profile →{% endif %}
                                                     </a>
                                                 {% endif %}
                                                 {% if audio_url %}
@@ -189,6 +189,15 @@
                                                     </button>
                                                 {% endif %}
                                             </div>
+                                            {% if staff['name_en'] == 'Prim Fongsamootr' %}
+                                                <p class="public-staff-note">
+                                                    {% if current_language == "th" %}
+                                                        (ขณะนี้อยู่ระหว่างลาศึกษาต่อ)
+                                                    {% else %}
+                                                        (Currently on Study Leave)
+                                                    {% endif %}
+                                                </p>
+                                            {% endif %}
                                         {% endif %}
                                     </div>
                                 </article>
