@@ -1,4 +1,4 @@
-# 主要功能：建立一個共用的 SQLite 連線函式，方便其他 route 直接匯入使用
+﻿# 主要功能：建立一個共用的 SQLite 連線函式，方便其他 route 直接匯入使用
 
 from pathlib import Path  # 用來處理檔案路徑，方便找到專案中的資料庫位置
 import re
@@ -514,18 +514,18 @@ def ensure_staff_directory_columns():
             """
             UPDATE staff
             SET
-                name_th = COALESCE(NULLIF(name_th, ''), ?),
-                position_en = COALESCE(NULLIF(position_en, ''), ?),
-                position_th = COALESCE(NULLIF(position_th, ''), ?),
-                department_en = COALESCE(NULLIF(department_en, ''), ?),
-                department_th = COALESCE(NULLIF(department_th, ''), ?),
-                staff_group = COALESCE(NULLIF(staff_group, ''), ?),
+                name_th = COALESCE(NULLIF(TRIM(name_th), ''''), ?),
+                position_en = COALESCE(NULLIF(TRIM(position_en), ''''), ?),
+                position_th = COALESCE(NULLIF(TRIM(position_th), ''''), ?),
+                department_en = COALESCE(NULLIF(TRIM(department_en), ''''), ?),
+                department_th = COALESCE(NULLIF(TRIM(department_th), ''''), ?),
+                staff_group = COALESCE(NULLIF(TRIM(staff_group), ''''), ?),
                 sort_order = CASE WHEN COALESCE(sort_order, 0) = 0 THEN ? ELSE sort_order END,
-                photo_filename = COALESCE(NULLIF(photo_filename, ''), ?),
-                profile_url = COALESCE(NULLIF(profile_url, ''), ?),
-                audio_en_url = COALESCE(NULLIF(audio_en_url, ''), ?),
-                audio_th_url = COALESCE(NULLIF(audio_th_url, ''), ?)
-            WHERE name_en = ?
+                photo_filename = COALESCE(NULLIF(TRIM(photo_filename), ''''), ?),
+                profile_url = COALESCE(NULLIF(TRIM(profile_url), ''''), ?),
+                audio_en_url = COALESCE(NULLIF(TRIM(audio_en_url), ''''), ?),
+                audio_th_url = COALESCE(NULLIF(TRIM(audio_th_url), ''''), ?)
+            WHERE LOWER(TRIM(name_en)) = LOWER(TRIM(?))
             """,
             (
                 staff["name_th"],
@@ -796,7 +796,7 @@ def ensure_default_staff():
 
     for staff in DEFAULT_STAFF:
         existing_staff = connection.execute(
-            "SELECT id FROM staff WHERE name_en = ?",
+            "SELECT id FROM staff WHERE LOWER(TRIM(name_en)) = LOWER(TRIM(?))",
             (staff["name_en"],)
         ).fetchone()
 
