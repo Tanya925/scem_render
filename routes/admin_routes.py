@@ -1,6 +1,7 @@
 # 主要功能：管理後台相關頁面的網址
 
 from functools import wraps  # 用來建立可重複使用的登入檢查裝飾器
+import json
 from pathlib import Path
 from uuid import uuid4
 
@@ -18,6 +19,7 @@ from database import (
     create_staff,
     update_staff,
     delete_staff,
+    parse_project_custom_fields,
     get_all_projects,
     get_project_by_id,
     create_project,
@@ -231,6 +233,8 @@ def staff():
             "sort_order": request.form.get("sort_order", type=int) or 0,
             "photo_filename": uploaded_photo_filename or (existing_staff["photo_filename"] if existing_staff else ""),
             "profile_url": profile_url,
+            "scopus_author_id": request.form.get("scopus_author_id", "").strip(),
+            "scopus_hindex": existing_staff["scopus_hindex"] if existing_staff else None,
             "audio_en_url": audio_en_url,
             "audio_th_url": audio_th_url,
         }
@@ -266,12 +270,20 @@ def staff():
 def projects():
     # 預設是新增模式，因此先不指定正在編輯哪一筆專案
     editing_project = None
+    editing_custom_team_fields = []
+    editing_custom_detail_fields = []
     success_message = None
 
     # 如果網址有帶 edit_id，代表管理員要編輯既有專案
     edit_id = request.args.get("edit_id", type=int)
     if edit_id:
         editing_project = get_project_by_id(edit_id)
+        editing_custom_team_fields = parse_project_custom_fields(
+            editing_project["custom_team_fields_json"]
+        )
+        editing_custom_detail_fields = parse_project_custom_fields(
+            editing_project["custom_detail_fields_json"]
+        )
 
     # 後台按下新增或更新後，會走 POST 流程
     if request.method == "POST":
@@ -289,11 +301,97 @@ def projects():
                 "admin_projects.html",
                 project_list=project_list,
                 editing_project=None,
+                editing_custom_team_fields=[],
+                editing_custom_detail_fields=[],
                 success_message=success_message,
             )
 
         project_id = request.form.get("project_id", type=int)
         existing_project = get_project_by_id(project_id) if project_id else None
+        uploaded_leader_photo = save_uploaded_file(
+            request.files.get("leader_photo_file"),
+            "uploads",
+            IMAGE_EXTENSIONS,
+        )
+        uploaded_deputy_photo = save_uploaded_file(
+            request.files.get("deputy_photo_file"),
+            "uploads",
+            IMAGE_EXTENSIONS,
+        )
+        uploaded_coordinator_photo = save_uploaded_file(
+            request.files.get("coordinator_photo_file"),
+            "uploads",
+            IMAGE_EXTENSIONS,
+        )
+        uploaded_advisor_photo = save_uploaded_file(
+            request.files.get("advisor_photo_file"),
+            "uploads",
+            IMAGE_EXTENSIONS,
+        )
+
+        custom_team_labels_en = request.form.getlist("custom_team_label_en[]")
+        custom_team_labels_th = request.form.getlist("custom_team_label_th[]")
+        custom_team_values_en = request.form.getlist("custom_team_value_en[]")
+        custom_team_values_th = request.form.getlist("custom_team_value_th[]")
+        custom_team_existing_photos = request.form.getlist("custom_team_existing_photo[]")
+        custom_team_uploaded_photos = request.files.getlist("custom_team_photo_file[]")
+
+        custom_team_fields = []
+        custom_team_field_count = max(
+            len(custom_team_labels_en),
+            len(custom_team_labels_th),
+            len(custom_team_values_en),
+            len(custom_team_values_th),
+            len(custom_team_existing_photos),
+            len(custom_team_uploaded_photos),
+        )
+        for index in range(custom_team_field_count):
+            label_en = custom_team_labels_en[index].strip() if index < len(custom_team_labels_en) else ""
+            label_th = custom_team_labels_th[index].strip() if index < len(custom_team_labels_th) else ""
+            value_en = custom_team_values_en[index].strip() if index < len(custom_team_values_en) else ""
+            value_th = custom_team_values_th[index].strip() if index < len(custom_team_values_th) else ""
+            existing_photo = custom_team_existing_photos[index].strip() if index < len(custom_team_existing_photos) else ""
+            uploaded_file = custom_team_uploaded_photos[index] if index < len(custom_team_uploaded_photos) else None
+            uploaded_photo = save_uploaded_file(
+                uploaded_file,
+                "uploads",
+                IMAGE_EXTENSIONS,
+            )
+
+            if label_en or label_th or value_en or value_th or existing_photo or uploaded_photo:
+                custom_team_fields.append({
+                    "label_en": label_en,
+                    "label_th": label_th,
+                    "value_en": value_en,
+                    "value_th": value_th,
+                    "photo_filename": uploaded_photo or existing_photo,
+                })
+
+        custom_detail_labels_en = request.form.getlist("custom_detail_label_en[]")
+        custom_detail_labels_th = request.form.getlist("custom_detail_label_th[]")
+        custom_detail_values_en = request.form.getlist("custom_detail_value_en[]")
+        custom_detail_values_th = request.form.getlist("custom_detail_value_th[]")
+
+        custom_detail_fields = []
+        custom_detail_field_count = max(
+            len(custom_detail_labels_en),
+            len(custom_detail_labels_th),
+            len(custom_detail_values_en),
+            len(custom_detail_values_th),
+        )
+        for index in range(custom_detail_field_count):
+            label_en = custom_detail_labels_en[index].strip() if index < len(custom_detail_labels_en) else ""
+            label_th = custom_detail_labels_th[index].strip() if index < len(custom_detail_labels_th) else ""
+            value_en = custom_detail_values_en[index].strip() if index < len(custom_detail_values_en) else ""
+            value_th = custom_detail_values_th[index].strip() if index < len(custom_detail_values_th) else ""
+
+            if label_en or label_th or value_en or value_th:
+                custom_detail_fields.append({
+                    "label_en": label_en,
+                    "label_th": label_th,
+                    "value_en": value_en,
+                    "value_th": value_th,
+                })
 
         form_data = {
             "sort_order": existing_project["sort_order"] if existing_project else 0,
@@ -304,12 +402,37 @@ def projects():
             "title_th": request.form.get("title_th", "").strip(),
             "leader_en": request.form.get("leader_en", "").strip(),
             "leader_th": request.form.get("leader_th", "").strip(),
+            "leader_photo_filename": uploaded_leader_photo or (existing_project["leader_photo_filename"] if existing_project else ""),
             "deputy_en": request.form.get("deputy_en", "").strip(),
             "deputy_th": request.form.get("deputy_th", "").strip(),
+            "deputy_photo_filename": uploaded_deputy_photo or (existing_project["deputy_photo_filename"] if existing_project else ""),
+            "coordinator_en": request.form.get("coordinator_en", "").strip(),
+            "coordinator_th": request.form.get("coordinator_th", "").strip(),
+            "coordinator_photo_filename": uploaded_coordinator_photo or (existing_project["coordinator_photo_filename"] if existing_project else ""),
+            "advisor_en": request.form.get("advisor_en", "").strip(),
+            "advisor_th": request.form.get("advisor_th", "").strip(),
+            "advisor_photo_filename": uploaded_advisor_photo or (existing_project["advisor_photo_filename"] if existing_project else ""),
             "researcher_en": request.form.get("researcher_en", "").strip(),
             "researcher_th": request.form.get("researcher_th", "").strip(),
             "engineer_en": request.form.get("engineer_en", "").strip(),
             "engineer_th": request.form.get("engineer_th", "").strip(),
+            "assistant_en": request.form.get("assistant_en", "").strip(),
+            "assistant_th": request.form.get("assistant_th", "").strip(),
+            "duration_en": request.form.get("duration_en", "").strip(),
+            "duration_th": request.form.get("duration_th", "").strip(),
+            "lead_unit_en": request.form.get("lead_unit_en", "").strip(),
+            "lead_unit_th": request.form.get("lead_unit_th", "").strip(),
+            "partner_en": request.form.get("partner_en", "").strip(),
+            "partner_th": request.form.get("partner_th", "").strip(),
+            "funding_en": request.form.get("funding_en", "").strip(),
+            "funding_th": request.form.get("funding_th", "").strip(),
+            "budget_en": request.form.get("budget_en", "").strip(),
+            "budget_th": request.form.get("budget_th", "").strip(),
+            "collaboration_details_en": request.form.get("collaboration_details_en", "").strip(),
+            "collaboration_details_th": request.form.get("collaboration_details_th", "").strip(),
+            "custom_team_fields_json": json.dumps(custom_team_fields, ensure_ascii=False),
+            "custom_detail_fields_json": json.dumps(custom_detail_fields, ensure_ascii=False),
+            "notes": request.form.get("notes", "").strip(),
             "description_en": request.form.get("description_en", "").strip(),
             "description_th": request.form.get("description_th", "").strip(),
             "project_type": request.form.get("project_type", "ongoing").strip(),
@@ -332,5 +455,7 @@ def projects():
         "admin_projects.html",
         project_list=project_list,
         editing_project=editing_project,
+        editing_custom_team_fields=editing_custom_team_fields,
+        editing_custom_detail_fields=editing_custom_detail_fields,
         success_message=success_message,
     )

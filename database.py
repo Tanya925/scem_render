@@ -1,6 +1,7 @@
-﻿# 主要功能：建立一個共用的 SQLite 連線函式，方便其他 route 直接匯入使用
+# 主要功能：建立一個共用的 SQLite 連線函式，方便其他 route 直接匯入使用
 
 from pathlib import Path  # 用來處理檔案路徑，方便找到專案中的資料庫位置
+import json
 import re
 import sqlite3  # SQLite 是這個專案目前使用的資料庫
 from werkzeug.security import generate_password_hash
@@ -13,6 +14,8 @@ DATABASE_PATH = BASE_DIR / "scem.db"
 AUDIO_BASE_DIR = BASE_DIR / "static" / "audio"
 DEFAULT_ADMIN_USERNAME = "admin"
 DEFAULT_ADMIN_PASSWORD = "admin123"
+SCOPUS_AUTHOR_URL_TEMPLATE = "https://www.scopus.com/authid/detail.uri?authorId={author_id}"
+SCOPUS_RESULTS_FILE = BASE_DIR / "scopus_hindex_results.csv"
 
 
 # 這是首頁 General Info 的預設資料。
@@ -164,11 +167,10 @@ DEFAULT_STAFF = [
     },
 ]
 
-
 STAFF_DIRECTORY_SECTIONS = [
     {"key": "advisor", "title_en": "ADVISOR", "title_th": "ที่ปรึกษา"},
     {"key": "member", "title_en": "MEMBER", "title_th": "สมาชิก"},
-    {"key": "accba", "title_en": "ACCBA", "title_th": "ACCBA"},
+    {"key": "accba", "title_en": "CMUBS", "title_th": "CMUBS"},
     {"key": "researcher", "title_en": "RESEARCHER", "title_th": "นักวิจัย"},
 ]
 
@@ -286,6 +288,8 @@ def ensure_staff_table():
             sort_order INTEGER NOT NULL DEFAULT 0,
             photo_filename TEXT,
             profile_url TEXT NOT NULL DEFAULT '',
+            scopus_author_id TEXT NOT NULL DEFAULT '',
+            scopus_hindex INTEGER,
             audio_en_url TEXT NOT NULL DEFAULT '',
             audio_th_url TEXT NOT NULL DEFAULT ''
         )
@@ -427,6 +431,34 @@ def attach_staff_audio_urls(staff_rows):
     return enriched_staff_rows
 
 
+def attach_staff_scopus_metadata(staff_rows):
+    if not staff_rows:
+        return []
+
+    enriched_staff_rows = []
+
+    for staff in staff_rows:
+        staff_data = dict(staff)
+        staff_data["scopus_url"] = build_staff_scopus_url(staff_data)
+        enriched_staff_rows.append(staff_data)
+
+    return enriched_staff_rows
+
+
+def load_scopus_seed_rows():
+    if not SCOPUS_RESULTS_FILE.exists():
+        return []
+
+    try:
+        import csv
+
+        with SCOPUS_RESULTS_FILE.open("r", encoding="utf-8-sig", newline="") as csvfile:
+            reader = csv.DictReader(csvfile)
+            return [row for row in reader if isinstance(row, dict)]
+    except Exception:
+        return []
+
+
 def sync_staff_audio_urls_in_db(connection):
     audio_lookup_en = build_staff_audio_lookup("en")
     audio_lookup_th = build_staff_audio_lookup("th")
@@ -551,23 +583,35 @@ def ensure_staff_directory_columns():
     if "audio_th_url" not in column_names:
         connection.execute("ALTER TABLE staff ADD COLUMN audio_th_url TEXT NOT NULL DEFAULT ''")
 
+    if "scopus_author_id" not in column_names:
+        connection.execute("ALTER TABLE staff ADD COLUMN scopus_author_id TEXT NOT NULL DEFAULT ''")
+
+    if "scopus_hindex" not in column_names:
+        connection.execute("ALTER TABLE staff ADD COLUMN scopus_hindex INTEGER")
+
+    scopus_seed_lookup = {}
+    for row in load_scopus_seed_rows():
+        normalized_name = normalize_project_person_name(row.get("name", ""))
+        if normalized_name:
+            scopus_seed_lookup[normalized_name] = row
+
     for staff in DEFAULT_STAFF:
         connection.execute(
             """
             UPDATE staff
             SET
-                name_th = COALESCE(NULLIF(TRIM(name_th), ''''), ?),
-                position_en = COALESCE(NULLIF(TRIM(position_en), ''''), ?),
-                position_th = COALESCE(NULLIF(TRIM(position_th), ''''), ?),
-                department_en = COALESCE(NULLIF(TRIM(department_en), ''''), ?),
-                department_th = COALESCE(NULLIF(TRIM(department_th), ''''), ?),
-                staff_group = COALESCE(NULLIF(TRIM(staff_group), ''''), ?),
+                name_th = COALESCE(NULLIF(name_th, ''), ?),
+                position_en = COALESCE(NULLIF(position_en, ''), ?),
+                position_th = COALESCE(NULLIF(position_th, ''), ?),
+                department_en = COALESCE(NULLIF(department_en, ''), ?),
+                department_th = COALESCE(NULLIF(department_th, ''), ?),
+                staff_group = COALESCE(NULLIF(staff_group, ''), ?),
                 sort_order = CASE WHEN COALESCE(sort_order, 0) = 0 THEN ? ELSE sort_order END,
-                photo_filename = COALESCE(NULLIF(TRIM(photo_filename), ''''), ?),
-                profile_url = COALESCE(NULLIF(TRIM(profile_url), ''''), ?),
-                audio_en_url = COALESCE(NULLIF(TRIM(audio_en_url), ''''), ?),
-                audio_th_url = COALESCE(NULLIF(TRIM(audio_th_url), ''''), ?)
-            WHERE LOWER(TRIM(name_en)) = LOWER(TRIM(?))
+                photo_filename = COALESCE(NULLIF(photo_filename, ''), ?),
+                profile_url = COALESCE(NULLIF(profile_url, ''), ?),
+                audio_en_url = COALESCE(NULLIF(audio_en_url, ''), ?),
+                audio_th_url = COALESCE(NULLIF(audio_th_url, ''), ?)
+            WHERE name_en = ?
             """,
             (
                 staff["name_th"],
@@ -584,6 +628,41 @@ def ensure_staff_directory_columns():
                 staff["name_en"],
             )
         )
+
+    if scopus_seed_lookup:
+        staff_rows = connection.execute(
+            "SELECT id, name_en, scopus_author_id, scopus_hindex FROM staff"
+        ).fetchall()
+
+        for staff in staff_rows:
+            normalized_name = normalize_project_person_name(staff["name_en"])
+            seed_row = scopus_seed_lookup.get(normalized_name)
+            if not seed_row:
+                continue
+
+            raw_hindex = (seed_row.get("hindex") or "").strip()
+            try:
+                parsed_hindex = int(raw_hindex) if raw_hindex != "" else None
+            except ValueError:
+                parsed_hindex = None
+
+            connection.execute(
+                """
+                UPDATE staff
+                SET
+                    scopus_author_id = COALESCE(NULLIF(scopus_author_id, ''), ?),
+                    scopus_hindex = CASE
+                        WHEN scopus_hindex IS NULL THEN ?
+                        ELSE scopus_hindex
+                    END
+                WHERE id = ?
+                """,
+                (
+                    (seed_row.get("author_id") or "").strip(),
+                    parsed_hindex,
+                    staff["id"],
+                )
+            )
 
     # 再補一次所有既有資料的 staff_group，
     # 讓後台與首頁分組都能依目前 position 正常運作。
@@ -602,7 +681,6 @@ def ensure_staff_directory_columns():
         """
     )
 
-    sync_staff_audio_urls_in_db(connection)
     connection.commit()
     connection.close()
 
@@ -839,7 +917,7 @@ def ensure_default_staff():
 
     for staff in DEFAULT_STAFF:
         existing_staff = connection.execute(
-            "SELECT id FROM staff WHERE LOWER(TRIM(name_en)) = LOWER(TRIM(?))",
+            "SELECT id FROM staff WHERE name_en = ?",
             (staff["name_en"],)
         ).fetchone()
 
@@ -859,9 +937,11 @@ def ensure_default_staff():
                 sort_order,
                 photo_filename,
                 profile_url,
+                scopus_author_id,
+                scopus_hindex,
                 audio_en_url,
                 audio_th_url
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 staff["name_en"],
@@ -874,6 +954,8 @@ def ensure_default_staff():
                 staff.get("sort_order", 0),
                 staff["photo_filename"],
                 staff["profile_url"],
+                staff.get("scopus_author_id", ""),
+                staff.get("scopus_hindex"),
                 staff.get("audio_en_url", ""),
                 staff.get("audio_th_url", ""),
             )
@@ -910,7 +992,7 @@ def get_all_staff():
     ).fetchall()
     connection.close()
 
-    return attach_staff_audio_urls(staff_list)
+    return attach_staff_scopus_metadata(staff_list)
 
 
 # 根據 staff 編號取得單一人物資料。
@@ -928,8 +1010,7 @@ def get_staff_by_id(staff_id):
     if staff is None:
         return None
 
-    attached_staff = attach_staff_audio_urls([staff])
-    return attached_staff[0] if attached_staff else None
+    return attach_staff_scopus_metadata([staff])[0]
 
 
 # 新增一筆 staff 資料。
@@ -956,9 +1037,11 @@ def create_staff(form_data):
             sort_order,
             photo_filename,
             profile_url,
+            scopus_author_id,
+            scopus_hindex,
             audio_en_url,
             audio_th_url
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             form_data["name_en"],
@@ -971,6 +1054,8 @@ def create_staff(form_data):
             form_data.get("sort_order", 0),
             form_data["photo_filename"],
             form_data["profile_url"],
+            form_data.get("scopus_author_id", ""),
+            form_data.get("scopus_hindex"),
             form_data.get("audio_en_url", ""),
             form_data.get("audio_th_url", ""),
         )
@@ -1004,6 +1089,8 @@ def update_staff(staff_id, form_data):
             sort_order = ?,
             photo_filename = ?,
             profile_url = ?,
+            scopus_author_id = ?,
+            scopus_hindex = ?,
             audio_en_url = ?,
             audio_th_url = ?
         WHERE id = ?
@@ -1019,6 +1106,8 @@ def update_staff(staff_id, form_data):
             form_data.get("sort_order", 0),
             form_data["photo_filename"],
             form_data["profile_url"],
+            form_data.get("scopus_author_id", ""),
+            form_data.get("scopus_hindex"),
             form_data.get("audio_en_url", ""),
             form_data.get("audio_th_url", ""),
             staff_id,
@@ -1056,7 +1145,7 @@ def get_active_staff_grouped():
     ).fetchall()
     connection.close()
 
-    staff_rows = attach_staff_audio_urls(staff_rows)
+    staff_rows = attach_staff_scopus_metadata(staff_rows)
 
     grouped_staff = {
         "professor": [],
@@ -1086,7 +1175,7 @@ def get_staff_directory():
     ).fetchall()
     connection.close()
 
-    return attach_staff_audio_urls(staff_rows)
+    return attach_staff_scopus_metadata(staff_rows)
 
 
 def get_staff_directory_sections():
@@ -1226,17 +1315,121 @@ def ensure_research_projects_table():
             title_th TEXT NOT NULL,
             leader_en TEXT,
             leader_th TEXT,
+            leader_photo_filename TEXT,
             deputy_en TEXT,
             deputy_th TEXT,
+            deputy_photo_filename TEXT,
+            coordinator_en TEXT,
+            coordinator_th TEXT,
+            coordinator_photo_filename TEXT,
+            advisor_en TEXT,
+            advisor_th TEXT,
+            advisor_photo_filename TEXT,
             researcher_en TEXT,
             researcher_th TEXT,
             engineer_en TEXT,
             engineer_th TEXT,
+            assistant_en TEXT,
+            assistant_th TEXT,
+            duration_en TEXT,
+            duration_th TEXT,
+            lead_unit_en TEXT,
+            lead_unit_th TEXT,
+            partner_en TEXT,
+            partner_th TEXT,
+            funding_en TEXT,
+            funding_th TEXT,
+            budget_en TEXT,
+            budget_th TEXT,
+            collaboration_details_en TEXT,
+            collaboration_details_th TEXT,
+            custom_team_fields_json TEXT,
+            custom_detail_fields_json TEXT,
+            notes TEXT,
             description_en TEXT,
             description_th TEXT
         )
         """
     )
+
+    columns = connection.execute("PRAGMA table_info(research_projects)").fetchall()
+    column_names = {column["name"] for column in columns}
+
+    if "assistant_en" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN assistant_en TEXT")
+
+    if "assistant_th" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN assistant_th TEXT")
+
+    if "duration_en" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN duration_en TEXT")
+
+    if "duration_th" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN duration_th TEXT")
+
+    if "lead_unit_en" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN lead_unit_en TEXT")
+
+    if "lead_unit_th" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN lead_unit_th TEXT")
+
+    if "partner_en" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN partner_en TEXT")
+
+    if "partner_th" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN partner_th TEXT")
+
+    if "funding_en" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN funding_en TEXT")
+
+    if "funding_th" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN funding_th TEXT")
+
+    if "leader_photo_filename" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN leader_photo_filename TEXT")
+
+    if "deputy_photo_filename" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN deputy_photo_filename TEXT")
+
+    if "coordinator_en" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN coordinator_en TEXT")
+
+    if "coordinator_th" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN coordinator_th TEXT")
+
+    if "coordinator_photo_filename" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN coordinator_photo_filename TEXT")
+
+    if "advisor_en" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN advisor_en TEXT")
+
+    if "advisor_th" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN advisor_th TEXT")
+
+    if "advisor_photo_filename" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN advisor_photo_filename TEXT")
+
+    if "budget_en" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN budget_en TEXT")
+
+    if "budget_th" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN budget_th TEXT")
+
+    if "collaboration_details_en" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN collaboration_details_en TEXT")
+
+    if "collaboration_details_th" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN collaboration_details_th TEXT")
+
+    if "custom_team_fields_json" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN custom_team_fields_json TEXT")
+
+    if "custom_detail_fields_json" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN custom_detail_fields_json TEXT")
+
+    if "notes" not in column_names:
+        connection.execute("ALTER TABLE research_projects ADD COLUMN notes TEXT")
+
     connection.commit()
     connection.close()
 
@@ -1286,22 +1479,40 @@ def get_project_by_id(project_id):
 
 def normalize_project_person_name(name):
     cleaned_name = (name or "").strip().lower()
-    for character in [".", ",", " ", "\n", "\t", "(", ")"]:
-        cleaned_name = cleaned_name.replace(character, "")
-    return cleaned_name
+    cleaned_name = cleaned_name.replace("\n", " ").replace("\t", " ")
+    cleaned_name = re.sub(r"[.,;:()\-_/]", " ", cleaned_name)
 
-
-# 根據 ongoing project 內的成員姓名，從 staff 表中找出對應照片。
-# 詳細頁只需要照片檔名與姓名，不顯示 department / affiliation。
-def get_project_team_profiles(project):
-    ensure_staff_directory_columns()
-
-    role_fields = {
-        "leader": ("leader_en", "leader_th"),
-        "deputy": ("deputy_en", "deputy_th"),
-        "researcher": ("researcher_en", "researcher_th"),
-        "engineer": ("engineer_en", "engineer_th"),
+    removable_tokens = {
+        "assoc", "associate", "asst", "assistant", "prof", "professor", "distinguished",
+        "of", "practice", "dr", "ph", "d", "phd", "eng", "deng", "miss", "mr", "mrs", "ms",
+        "รองศาสตราจารย์", "ผู้ช่วยศาสตราจารย์", "ศาสตราจารย์", "ศาสตราจารย์เชี่ยวชาญพิเศษ",
+        "อาจารย์", "ดร", "ผศ", "รศ", "ศ", "นางสาว", "นาย", "นาง",
     }
+
+    normalized_tokens = []
+    for token in cleaned_name.split():
+        compact_token = token.strip()
+        if compact_token and compact_token not in removable_tokens:
+            normalized_tokens.append(compact_token)
+
+    return "".join(normalized_tokens)
+
+
+def build_staff_scopus_url(staff):
+    author_id = ""
+    try:
+        author_id = (staff["scopus_author_id"] or "").strip()
+    except (KeyError, TypeError, IndexError):
+        author_id = ""
+
+    if not author_id:
+        return ""
+
+    return SCOPUS_AUTHOR_URL_TEMPLATE.format(author_id=author_id)
+
+
+def get_staff_photo_lookup():
+    ensure_staff_directory_columns()
 
     connection = get_db_connection()
     staff_rows = connection.execute(
@@ -1319,6 +1530,72 @@ def get_project_team_profiles(project):
             if normalized_name:
                 staff_lookup[normalized_name] = staff
 
+    return staff_lookup
+
+
+def get_staff_scopus_targets():
+    ensure_staff_directory_columns()
+
+    connection = get_db_connection()
+    staff_rows = connection.execute(
+        """
+        SELECT id, name_en, name_th, scopus_author_id
+        FROM staff
+        WHERE COALESCE(NULLIF(scopus_author_id, ''), '') != ''
+        ORDER BY sort_order ASC, id ASC
+        """
+    ).fetchall()
+    connection.close()
+
+    return [dict(staff) for staff in staff_rows]
+
+
+def update_staff_scopus_metrics(rows):
+    if not rows:
+        return
+
+    ensure_staff_directory_columns()
+
+    connection = get_db_connection()
+    for row in rows:
+        author_id = (row.get("author_id") or "").strip()
+        if not author_id:
+            continue
+
+        hindex_value = row.get("hindex")
+        try:
+            parsed_hindex = int(hindex_value) if hindex_value not in ("", None) else None
+        except (TypeError, ValueError):
+            parsed_hindex = None
+
+        connection.execute(
+            """
+            UPDATE staff
+            SET scopus_hindex = ?
+            WHERE scopus_author_id = ?
+            """,
+            (
+                parsed_hindex,
+                author_id,
+            )
+        )
+
+    connection.commit()
+    connection.close()
+
+
+# 根據 ongoing project 內的成員姓名，從 staff 表中找出對應照片。
+# 詳細頁只需要照片檔名與姓名，不顯示 department / affiliation。
+def get_project_team_profiles(project):
+    role_fields = {
+        "leader": ("leader_en", "leader_th"),
+        "deputy": ("deputy_en", "deputy_th"),
+        "coordinator": ("coordinator_en", "coordinator_th"),
+        "advisor": ("advisor_en", "advisor_th"),
+    }
+
+    staff_lookup = get_staff_photo_lookup()
+
     team_profiles = {}
     for role_key, project_name_fields in role_fields.items():
         matched_staff = None
@@ -1332,6 +1609,21 @@ def get_project_team_profiles(project):
         team_profiles[role_key] = matched_staff
 
     return team_profiles
+
+
+def parse_project_custom_fields(raw_text):
+    if not raw_text:
+        return []
+
+    try:
+        parsed_fields = json.loads(raw_text)
+    except json.JSONDecodeError:
+        return []
+
+    if not isinstance(parsed_fields, list):
+        return []
+
+    return [field for field in parsed_fields if isinstance(field, dict)]
 
 
 # 新增一筆 project 資料。
@@ -1351,15 +1643,40 @@ def create_project(form_data):
             title_th,
             leader_en,
             leader_th,
+            leader_photo_filename,
             deputy_en,
             deputy_th,
+            deputy_photo_filename,
+            coordinator_en,
+            coordinator_th,
+            coordinator_photo_filename,
+            advisor_en,
+            advisor_th,
+            advisor_photo_filename,
             researcher_en,
             researcher_th,
             engineer_en,
             engineer_th,
+            assistant_en,
+            assistant_th,
+            duration_en,
+            duration_th,
+            lead_unit_en,
+            lead_unit_th,
+            partner_en,
+            partner_th,
+            funding_en,
+            funding_th,
+            budget_en,
+            budget_th,
+            collaboration_details_en,
+            collaboration_details_th,
+            custom_team_fields_json,
+            custom_detail_fields_json,
+            notes,
             description_en,
             description_th
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             form_data["project_type"],
@@ -1370,12 +1687,37 @@ def create_project(form_data):
             form_data["title_th"],
             form_data["leader_en"],
             form_data["leader_th"],
+            form_data["leader_photo_filename"],
             form_data["deputy_en"],
             form_data["deputy_th"],
+            form_data["deputy_photo_filename"],
+            form_data["coordinator_en"],
+            form_data["coordinator_th"],
+            form_data["coordinator_photo_filename"],
+            form_data["advisor_en"],
+            form_data["advisor_th"],
+            form_data["advisor_photo_filename"],
             form_data["researcher_en"],
             form_data["researcher_th"],
             form_data["engineer_en"],
             form_data["engineer_th"],
+            form_data["assistant_en"],
+            form_data["assistant_th"],
+            form_data["duration_en"],
+            form_data["duration_th"],
+            form_data["lead_unit_en"],
+            form_data["lead_unit_th"],
+            form_data["partner_en"],
+            form_data["partner_th"],
+            form_data["funding_en"],
+            form_data["funding_th"],
+            form_data["budget_en"],
+            form_data["budget_th"],
+            form_data["collaboration_details_en"],
+            form_data["collaboration_details_th"],
+            form_data["custom_team_fields_json"],
+            form_data["custom_detail_fields_json"],
+            form_data["notes"],
             form_data["description_en"],
             form_data["description_th"],
         )
@@ -1402,12 +1744,37 @@ def update_project(project_id, form_data):
             title_th = ?,
             leader_en = ?,
             leader_th = ?,
+            leader_photo_filename = ?,
             deputy_en = ?,
             deputy_th = ?,
+            deputy_photo_filename = ?,
+            coordinator_en = ?,
+            coordinator_th = ?,
+            coordinator_photo_filename = ?,
+            advisor_en = ?,
+            advisor_th = ?,
+            advisor_photo_filename = ?,
             researcher_en = ?,
             researcher_th = ?,
             engineer_en = ?,
             engineer_th = ?,
+            assistant_en = ?,
+            assistant_th = ?,
+            duration_en = ?,
+            duration_th = ?,
+            lead_unit_en = ?,
+            lead_unit_th = ?,
+            partner_en = ?,
+            partner_th = ?,
+            funding_en = ?,
+            funding_th = ?,
+            budget_en = ?,
+            budget_th = ?,
+            collaboration_details_en = ?,
+            collaboration_details_th = ?,
+            custom_team_fields_json = ?,
+            custom_detail_fields_json = ?,
+            notes = ?,
             description_en = ?,
             description_th = ?
         WHERE id = ?
@@ -1421,12 +1788,37 @@ def update_project(project_id, form_data):
             form_data["title_th"],
             form_data["leader_en"],
             form_data["leader_th"],
+            form_data["leader_photo_filename"],
             form_data["deputy_en"],
             form_data["deputy_th"],
+            form_data["deputy_photo_filename"],
+            form_data["coordinator_en"],
+            form_data["coordinator_th"],
+            form_data["coordinator_photo_filename"],
+            form_data["advisor_en"],
+            form_data["advisor_th"],
+            form_data["advisor_photo_filename"],
             form_data["researcher_en"],
             form_data["researcher_th"],
             form_data["engineer_en"],
             form_data["engineer_th"],
+            form_data["assistant_en"],
+            form_data["assistant_th"],
+            form_data["duration_en"],
+            form_data["duration_th"],
+            form_data["lead_unit_en"],
+            form_data["lead_unit_th"],
+            form_data["partner_en"],
+            form_data["partner_th"],
+            form_data["funding_en"],
+            form_data["funding_th"],
+            form_data["budget_en"],
+            form_data["budget_th"],
+            form_data["collaboration_details_en"],
+            form_data["collaboration_details_th"],
+            form_data["custom_team_fields_json"],
+            form_data["custom_detail_fields_json"],
+            form_data["notes"],
             form_data["description_en"],
             form_data["description_th"],
             project_id,

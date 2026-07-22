@@ -113,6 +113,16 @@
                 placeholder="https://example.com/profile or leave empty when uploading a PDF"
             >
 
+            <label for="scopus_author_id">Scopus Author ID</label>
+            <input
+                type="text"
+                id="scopus_author_id"
+                name="scopus_author_id"
+                value="{{ editing_staff['scopus_author_id'] if editing_staff else '' }}"
+                placeholder="例如 13403750900"
+            >
+            <p class="admin-form-hint">If present, the crawler can refresh this person's Scopus h-index automatically.</p>
+
             <label for="profile_pdf_file">Profile PDF</label>
             {% if editing_staff and editing_staff['profile_url'] and editing_staff['profile_url']|lower.endswith('.pdf') %}
                 <p class="admin-current-file">Current PDF: {{ editing_staff['profile_url'] }}</p>
@@ -184,6 +194,8 @@
                         <p>Display Order: {{ staff['sort_order'] }}</p>
                         <p>Photo: {{ staff['photo_filename'] }}</p>
                         <p>Profile: {{ staff['profile_url'] or '-' }}</p>
+                        <p>Scopus Author ID: {{ staff['scopus_author_id'] or '-' }}</p>
+                        <p>Scopus h-index: {{ staff['scopus_hindex'] if staff['scopus_hindex'] is not none else '-' }}</p>
                         <p>Audio EN: {{ staff['audio_en_url'] or '-' }}</p>
                         <p>Audio TH: {{ staff['audio_th_url'] or '-' }}</p>
                         <div class="staff-admin-actions">

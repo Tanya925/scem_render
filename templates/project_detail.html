@@ -22,97 +22,246 @@
                     {% endif %}
                 </a>
             </div>
-            {% if field_text(project, "year") %}
+            <h1>{{ field_text(project, "title") }}</h1>
+            {% if field_text(project, "duration") or field_text(project, "year") %}
                 <div class="project-detail-meta">
-                    <span class="research-status-pill ongoing-pill">{{ field_text(project, "year") }}</span>
+                    <span class="research-status-pill ongoing-pill">{{ field_text(project, "duration") or field_text(project, "year") }}</span>
                 </div>
             {% endif %}
-            <h1>{{ field_text(project, "title") }}</h1>
         </section>
 
         <section class="reveal-card project-detail-card">
-            <div class="project-detail-section-heading">
-                <span>{% if current_language == "th" %}ทีมโครงการ{% else %}Project Team{% endif %}</span>
-            </div>
-
-            <div class="research-detail-grid project-detail-team-grid">
-                {% if field_text(project, 'leader') %}
-                    <div class="research-detail-block project-person-card">
-                        <span class="project-photo-mark" aria-hidden="true">
-                            <span class="project-photo-crop">
-                                {% if project_team_profiles['leader'] and project_team_profiles['leader']['photo_filename'] %}
-                                    <img src="{{ url_for('static', filename='uploads/' ~ project_team_profiles['leader']['photo_filename']) }}" alt="">
-                                {% else %}
-                                    <span class="project-photo-placeholder"></span>
-                                {% endif %}
-                            </span>
-                        </span>
-                        <div class="project-person-copy">
-                            <h3>{% if current_language == "th" %}หัวหน้าโครงการ{% else %}Project Leader{% endif %}</h3>
-                            <p>{{ field_text(project, 'leader') }}</p>
-                        </div>
+            {% set custom_team_fields = project_custom_team_fields(project) %}
+            {% if field_text(project, 'leader') or field_text(project, 'deputy') or field_text(project, 'coordinator') or field_text(project, 'advisor') or field_text(project, 'researcher') or field_text(project, 'engineer') or field_text(project, 'assistant') or custom_team_fields %}
+                <section class="project-detail-section">
+                    <div class="project-detail-section-heading">
+                        <span>{% if current_language == "th" %}ทีมโครงการ{% else %}Project Team{% endif %}</span>
                     </div>
-                {% endif %}
-                {% if field_text(project, 'deputy') %}
-                    <div class="research-detail-block project-person-card">
-                        <span class="project-photo-mark" aria-hidden="true">
-                            <span class="project-photo-crop">
-                                {% if project_team_profiles['deputy'] and project_team_profiles['deputy']['photo_filename'] %}
-                                    <img src="{{ url_for('static', filename='uploads/' ~ project_team_profiles['deputy']['photo_filename']) }}" alt="">
-                                {% else %}
-                                    <span class="project-photo-placeholder"></span>
-                                {% endif %}
-                            </span>
-                        </span>
-                        <div class="project-person-copy">
-                            <h3>{% if current_language == "th" %}รองหัวหน้าโครงการ{% else %}Deputy Project Leader{% endif %}</h3>
-                            <p>{{ field_text(project, 'deputy') }}</p>
-                        </div>
+                    <div class="research-detail-grid project-detail-team-grid">
+                        {% if field_text(project, 'leader') %}
+                            <div class="research-detail-block project-person-card">
+                                <span class="project-photo-mark" aria-hidden="true">
+                                    <span class="project-photo-crop">
+                                        {% set leader_photo = photo_for_person(field_text(project, 'leader'), project['leader_photo_filename']) %}
+                                        {% if leader_photo %}
+                                            <img src="{{ url_for('static', filename='uploads/' ~ leader_photo) }}" alt="">
+                                        {% else %}
+                                            <span class="project-photo-placeholder"></span>
+                                        {% endif %}
+                                    </span>
+                                </span>
+                                <div class="project-person-copy">
+                                    <h3>{% if current_language == "th" %}หัวหน้าโครงการ{% else %}Project Leader{% endif %}</h3>
+                                    <p>{{ field_text(project, 'leader') }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if field_text(project, 'deputy') %}
+                            <div class="research-detail-block project-person-card">
+                                <span class="project-photo-mark" aria-hidden="true">
+                                    <span class="project-photo-crop">
+                                        {% set deputy_photo = photo_for_person(field_text(project, 'deputy'), project['deputy_photo_filename']) %}
+                                        {% if deputy_photo %}
+                                            <img src="{{ url_for('static', filename='uploads/' ~ deputy_photo) }}" alt="">
+                                        {% else %}
+                                            <span class="project-photo-placeholder"></span>
+                                        {% endif %}
+                                    </span>
+                                </span>
+                                <div class="project-person-copy">
+                                    <h3>{% if current_language == "th" %}รองหัวหน้าโครงการ{% else %}Deputy Project Leader{% endif %}</h3>
+                                    <p>{{ field_text(project, 'deputy') }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if field_text(project, 'coordinator') %}
+                            <div class="research-detail-block project-person-card">
+                                <span class="project-photo-mark" aria-hidden="true">
+                                    <span class="project-photo-crop">
+                                        {% set coordinator_photo = photo_for_person(field_text(project, 'coordinator'), project['coordinator_photo_filename']) %}
+                                        {% if coordinator_photo %}
+                                            <img src="{{ url_for('static', filename='uploads/' ~ coordinator_photo) }}" alt="">
+                                        {% else %}
+                                            <span class="project-photo-placeholder"></span>
+                                        {% endif %}
+                                    </span>
+                                </span>
+                                <div class="project-person-copy">
+                                    <h3>{% if current_language == "th" %}ผู้ประสานงานโครงการ{% else %}Project Coordinator{% endif %}</h3>
+                                    <p>{{ field_text(project, 'coordinator') }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if field_text(project, 'advisor') %}
+                            <div class="research-detail-block project-person-card">
+                                <span class="project-photo-mark" aria-hidden="true">
+                                    <span class="project-photo-crop">
+                                        {% set advisor_photo = photo_for_person(field_text(project, 'advisor'), project['advisor_photo_filename']) %}
+                                        {% if advisor_photo %}
+                                            <img src="{{ url_for('static', filename='uploads/' ~ advisor_photo) }}" alt="">
+                                        {% else %}
+                                            <span class="project-photo-placeholder"></span>
+                                        {% endif %}
+                                    </span>
+                                </span>
+                                <div class="project-person-copy">
+                                    <h3>{% if current_language == "th" %}ที่ปรึกษาโครงการ{% else %}Project Advisor{% endif %}</h3>
+                                    <p>{{ field_text(project, 'advisor') }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% for field in custom_team_fields %}
+                            <div class="research-detail-block project-person-card">
+                                <span class="project-photo-mark" aria-hidden="true">
+                                    <span class="project-photo-crop">
+                                        {% if field['photo_filename'] %}
+                                            <img src="{{ url_for('static', filename='uploads/' ~ field['photo_filename']) }}" alt="">
+                                        {% else %}
+                                            <span class="project-photo-placeholder"></span>
+                                        {% endif %}
+                                    </span>
+                                </span>
+                                <div class="project-person-copy">
+                                    <h3>{{ field['label'] }}</h3>
+                                    <p>{{ field['value'] }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
-                {% endif %}
-                {% if field_text(project, 'researcher') %}
-                    <div class="research-detail-block project-person-card">
-                        <span class="project-photo-mark" aria-hidden="true">
-                            <span class="project-photo-crop">
-                                {% if project_team_profiles['researcher'] and project_team_profiles['researcher']['photo_filename'] %}
-                                    <img src="{{ url_for('static', filename='uploads/' ~ project_team_profiles['researcher']['photo_filename']) }}" alt="">
-                                {% else %}
-                                    <span class="project-photo-placeholder"></span>
-                                {% endif %}
-                            </span>
-                        </span>
-                        <div class="project-person-copy">
-                            <h3>{% if current_language == "th" %}นักวิจัย{% else %}Researcher{% endif %}</h3>
-                            <p>{{ field_text(project, 'researcher') }}</p>
-                        </div>
+                    <div class="research-detail-grid project-detail-info-grid">
+                        {% if field_text(project, 'researcher') %}
+                            <div class="research-detail-block project-info-block project-info-block-wide">
+                                <h3>{% if current_language == "th" %}นักวิจัย{% else %}Researchers{% endif %}</h3>
+                                <div class="project-member-grid">
+                                    {% for entry in project_people_entries(project, 'researcher') %}
+                                        {% if entry['type'] == 'heading' %}
+                                            <div class="project-member-heading">{{ entry['text'] }}</div>
+                                        {% else %}
+                                            <article class="project-member-card">
+                                                <span class="project-member-photo">
+                                                    {% if entry['photo_filename'] %}
+                                                        <img src="{{ url_for('static', filename='uploads/' ~ entry['photo_filename']) }}" alt="">
+                                                    {% else %}
+                                                        <span class="project-photo-placeholder"></span>
+                                                    {% endif %}
+                                                </span>
+                                                <span class="project-member-name">{{ entry['name'] }}</span>
+                                            </article>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if field_text(project, 'engineer') %}
+                            <div class="research-detail-block project-info-block project-info-block-wide">
+                                <h3>{% if current_language == "th" %}วิศวกรโครงการ{% else %}Project Engineers{% endif %}</h3>
+                                <div class="project-member-grid">
+                                    {% for entry in project_people_entries(project, 'engineer') %}
+                                        {% if entry['type'] == 'heading' %}
+                                            <div class="project-member-heading">{{ entry['text'] }}</div>
+                                        {% else %}
+                                            <article class="project-member-card">
+                                                <span class="project-member-photo">
+                                                    {% if entry['photo_filename'] %}
+                                                        <img src="{{ url_for('static', filename='uploads/' ~ entry['photo_filename']) }}" alt="">
+                                                    {% else %}
+                                                        <span class="project-photo-placeholder"></span>
+                                                    {% endif %}
+                                                </span>
+                                                <span class="project-member-name">{{ entry['name'] }}</span>
+                                            </article>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if field_text(project, 'assistant') %}
+                            <div class="research-detail-block project-info-block project-info-block-wide">
+                                <h3>{% if current_language == "th" %}ผู้ช่วยนักวิจัย{% else %}Research Assistants{% endif %}</h3>
+                                <div class="project-member-grid">
+                                    {% for entry in project_people_entries(project, 'assistant') %}
+                                        {% if entry['type'] == 'heading' %}
+                                            <div class="project-member-heading">{{ entry['text'] }}</div>
+                                        {% else %}
+                                            <article class="project-member-card">
+                                                <span class="project-member-photo">
+                                                    {% if entry['photo_filename'] %}
+                                                        <img src="{{ url_for('static', filename='uploads/' ~ entry['photo_filename']) }}" alt="">
+                                                    {% else %}
+                                                        <span class="project-photo-placeholder"></span>
+                                                    {% endif %}
+                                                </span>
+                                                <span class="project-member-name">{{ entry['name'] }}</span>
+                                            </article>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
                     </div>
-                {% endif %}
-                {% if field_text(project, 'engineer') %}
-                    <div class="research-detail-block project-person-card">
-                        <span class="project-photo-mark" aria-hidden="true">
-                            <span class="project-photo-crop">
-                                {% if project_team_profiles['engineer'] and project_team_profiles['engineer']['photo_filename'] %}
-                                    <img src="{{ url_for('static', filename='uploads/' ~ project_team_profiles['engineer']['photo_filename']) }}" alt="">
-                                {% else %}
-                                    <span class="project-photo-placeholder"></span>
-                                {% endif %}
-                            </span>
-                        </span>
-                        <div class="project-person-copy">
-                            <h3>{% if current_language == "th" %}วิศวกรโครงการ{% else %}Project Engineer{% endif %}</h3>
-                            <p>{{ field_text(project, 'engineer') }}</p>
-                        </div>
-                    </div>
-                {% endif %}
-            </div>
+                </section>
+            {% endif %}
 
             {% if field_text(project, "description") %}
-                <div class="project-detail-section-heading project-description-heading">
-                    <span>{% if current_language == "th" %}รายละเอียดโครงการ{% else %}Project Description{% endif %}</span>
-                </div>
-                <div class="research-detail-description project-description-card">
-                    <div class="multiline-content">{{ field_text(project, "description") }}</div>
-                </div>
+                <section class="project-detail-section">
+                    <div class="project-detail-section-heading">
+                        <span>{% if current_language == "th" %}รายละเอียดโครงการ{% else %}Project Description{% endif %}</span>
+                    </div>
+                    <div class="research-detail-description project-description-card">
+                        <div class="multiline-content">{{ field_text(project, "description") }}</div>
+                    </div>
+                </section>
+            {% endif %}
+
+            {% set custom_detail_fields = project_custom_detail_fields(project) %}
+            {% if field_text(project, 'lead_unit') or field_text(project, 'partner') or field_text(project, 'funding') or field_text(project, 'budget') or field_text(project, 'collaboration_details') or custom_detail_fields %}
+                <section class="project-detail-section">
+                    <div class="project-detail-section-heading">
+                        <span>{% if current_language == "th" %}รายละเอียดโครงการอื่น ๆ{% else %}Other Project Details{% endif %}</span>
+                    </div>
+                    <div class="research-detail-grid project-detail-info-grid">
+                        {% if field_text(project, 'lead_unit') %}
+                            <div class="research-detail-block project-info-block">
+                                <h3>{% if current_language == "th" %}หน่วยงานรับผิดชอบหลัก{% else %}Lead Implementing Unit{% endif %}</h3>
+                                <div class="multiline-content">{{ field_text(project, 'lead_unit') }}</div>
+                            </div>
+                        {% endif %}
+                        {% if field_text(project, 'funding') %}
+                            <div class="research-detail-block project-info-block">
+                                <h3>{% if current_language == "th" %}แหล่งทุน{% else %}Funding Source{% endif %}</h3>
+                                <div class="multiline-content">{{ field_text(project, 'funding') }}</div>
+                            </div>
+                        {% endif %}
+                        {% if field_text(project, 'budget') %}
+                            <div class="research-detail-block project-info-block">
+                                <h3>{% if current_language == "th" %}งบประมาณ{% else %}Budget{% endif %}</h3>
+                                <div class="multiline-content">{{ field_text(project, 'budget') }}</div>
+                            </div>
+                        {% endif %}
+                        {% if field_text(project, 'partner') %}
+                            <div class="research-detail-block project-info-block project-info-block-wide">
+                                <h3>{% if current_language == "th" %}หน่วยงานร่วมโครงการ{% else %}Partner Organisations{% endif %}</h3>
+                                <ul class="project-detail-list">
+                                    {% for line in text_lines(field_text(project, 'partner')) %}
+                                        <li>{{ line }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        {% if field_text(project, 'collaboration_details') %}
+                            <div class="research-detail-block project-info-block project-info-block-wide">
+                                <h3>{% if current_language == "th" %}รายละเอียดความร่วมมือ{% else %}Collaboration Details{% endif %}</h3>
+                                <div class="multiline-content">{{ field_text(project, 'collaboration_details') }}</div>
+                            </div>
+                        {% endif %}
+                        {% for field in custom_detail_fields %}
+                            <div class="research-detail-block project-info-block project-info-block-wide">
+                                <h3>{{ field['label'] }}</h3>
+                                <div class="multiline-content">{{ field['value'] }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
             {% endif %}
         </section>
     </main>

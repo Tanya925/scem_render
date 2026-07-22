@@ -256,6 +256,91 @@ body {
     min-height: 120px;
 }
 
+.admin-dynamic-section {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid #e5e7eb;
+    display: grid;
+    gap: 16px;
+}
+
+.admin-dynamic-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    border-radius: 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.admin-dynamic-header h2 {
+    margin: 0 0 6px;
+    font-size: 1.15rem;
+}
+
+.admin-dynamic-header p {
+    margin: 0;
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+.admin-dynamic-list {
+    display: grid;
+    gap: 16px;
+}
+
+.admin-dynamic-card {
+    padding: 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #ffffff;
+    display: grid;
+    gap: 14px;
+}
+
+.admin-dynamic-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.admin-inline-button {
+    border: none;
+    cursor: pointer;
+    font: inherit;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    white-space: nowrap;
+}
+
+.admin-action-button {
+    border: none;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+    color: #ffffff;
+    box-shadow: 0 10px 24px rgba(127, 29, 29, 0.22);
+    white-space: nowrap;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.admin-action-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(127, 29, 29, 0.28);
+    filter: brightness(1.02);
+}
+
+.admin-action-button.is-expanded {
+    background: linear-gradient(135deg, #111827 0%, #374151 100%);
+    box-shadow: 0 10px 24px rgba(17, 24, 39, 0.18);
+}
+
 /* 成功訊息樣式，儲存完成後顯示給管理者看 */
 .success-message {
     margin: 0 0 20px;

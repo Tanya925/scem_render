@@ -291,12 +291,34 @@
     }
 
     .research-detail-grid,
-    .admin-form-grid-two {
+    .admin-form-grid-two,
+    .project-overview-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .project-member-grid {
         grid-template-columns: 1fr;
     }
 
     .project-detail-page .research-detail-block {
-        grid-template-columns: 1fr;
+        padding: 22px 22px;
+    }
+
+    .project-person-card {
+        grid-template-columns: 68px minmax(0, 1fr) !important;
+        gap: 16px;
+        min-height: 112px;
+        align-items: flex-start;
+    }
+
+    .project-photo-mark {
+        width: 64px;
+        height: 64px;
+        border-width: 5px;
+    }
+
+    .project-person-copy {
+        padding-right: 0;
     }
 
     .project-detail-page .research-detail-block h3 {
@@ -307,38 +329,8 @@
         padding-top: 10px;
     }
 
-    .project-detail-page .project-person-card {
-        grid-template-columns: 68px minmax(0, 1fr);
-        gap: 16px;
-        padding: 22px 22px;
-        min-height: 112px;
-        align-items: flex-start;
-    }
-
-    .project-photo-mark {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        border-width: 5px;
-        padding: 0;
-    }
-
-    .project-photo-crop,
-    .project-photo-placeholder {
-        border-radius: 50%;
-    }
-
-    .project-person-copy {
-        padding-right: 0;
-    }
-
-    .project-detail-page .project-person-card h3,
-    .project-detail-page .project-person-card p {
-        padding: 0;
-    }
-
-    .project-detail-page .project-person-card h3 {
-        padding-bottom: 6px;
+    .project-overview-card {
+        padding: 18px 18px;
     }
 
     .project-detail-page .research-detail-description {
@@ -684,6 +676,36 @@
 
     .public-staff-card h3 {
         font-size: 1.08rem;
+    }
+
+    .public-staff-scopus-button {
+        min-width: 0;
+        max-width: none;
+        margin-top: 2px;
+        padding: 8px 7px 9px 9px;
+        gap: 2px;
+    }
+
+    .public-staff-category-arc {
+        top: -8px;
+        left: 50%;
+        width: 248px;
+        height: 248px;
+        transform: translateX(-50%);
+    }
+
+    .public-staff-category-arc .public-staff-category {
+        font-size: 15px;
+        letter-spacing: 0.14em;
+    }
+
+    .public-staff-scopus-label {
+        font-size: 0.5rem;
+        letter-spacing: 0.14em;
+    }
+
+    .public-staff-scopus-metric {
+        font-size: 0.68rem;
     }
 
     .public-staff-department {

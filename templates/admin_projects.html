@@ -11,8 +11,8 @@
     <main class="admin-form-page">
         <section class="admin-form-header">
             <h1>Manage Projects</h1>
-            <p>Create, edit, and delete research projects. Ongoing projects can store leader, deputy, researcher, engineer, and description fields in both languages.</p>
-            <p class="admin-form-hint">Finished projects only need year and title.</p>
+            <p>Create, edit, and delete research projects with the latest ongoing-project fields in both languages.</p>
+            <p class="admin-form-hint">Required fields must be filled in. Optional fields left empty will stay hidden on the public website.</p>
         </section>
 
         {% if success_message %}
@@ -20,7 +20,7 @@
         {% endif %}
 
         <!-- Project 新增 / 編輯表單 -->
-        <form method="POST" class="admin-form-card">
+        <form method="POST" class="admin-form-card" enctype="multipart/form-data">
             {% if editing_project %}
                 <input type="hidden" name="project_id" value="{{ editing_project['id'] }}">
             {% endif %}
@@ -48,6 +48,17 @@
 
             <div class="admin-form-grid admin-form-grid-two">
                 <div>
+                    <label for="duration_en">Project Duration EN</label>
+                    <input type="text" id="duration_en" name="duration_en" value="{{ editing_project['duration_en'] if editing_project else '' }}" required>
+                </div>
+                <div>
+                    <label for="duration_th">Project Duration TH</label>
+                    <input type="text" id="duration_th" name="duration_th" value="{{ editing_project['duration_th'] if editing_project else '' }}" required>
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
                     <label for="title_en">Project Title EN</label>
                     <input type="text" id="title_en" name="title_en" value="{{ editing_project['title_en'] if editing_project else '' }}" required>
                 </div>
@@ -60,12 +71,24 @@
             <div class="admin-form-grid admin-form-grid-two">
                 <div>
                     <label for="leader_en">Project Leader EN</label>
-                    <input type="text" id="leader_en" name="leader_en" value="{{ editing_project['leader_en'] if editing_project else '' }}">
+                    <input type="text" id="leader_en" name="leader_en" value="{{ editing_project['leader_en'] if editing_project else '' }}" required>
                 </div>
                 <div>
                     <label for="leader_th">Project Leader TH</label>
-                    <input type="text" id="leader_th" name="leader_th" value="{{ editing_project['leader_th'] if editing_project else '' }}">
+                    <input type="text" id="leader_th" name="leader_th" value="{{ editing_project['leader_th'] if editing_project else '' }}" required>
                 </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="leader_photo_file">Project Leader Photo</label>
+                    {% if editing_project and editing_project['leader_photo_filename'] %}
+                        <p class="admin-current-file">Current photo: {{ editing_project['leader_photo_filename'] }}</p>
+                    {% endif %}
+                    <input type="file" id="leader_photo_file" name="leader_photo_file" accept=".jpg,.jpeg,.png,.gif,.webp,image/*">
+                    <p class="admin-form-hint">Optional. Upload only if this person's photo is not already available in the staff list.</p>
+                </div>
+                <div></div>
             </div>
 
             <div class="admin-form-grid admin-form-grid-two">
@@ -81,36 +104,192 @@
 
             <div class="admin-form-grid admin-form-grid-two">
                 <div>
-                    <label for="researcher_en">Researcher EN</label>
-                    <input type="text" id="researcher_en" name="researcher_en" value="{{ editing_project['researcher_en'] if editing_project else '' }}">
+                    <label for="deputy_photo_file">Deputy Project Leader Photo</label>
+                    {% if editing_project and editing_project['deputy_photo_filename'] %}
+                        <p class="admin-current-file">Current photo: {{ editing_project['deputy_photo_filename'] }}</p>
+                    {% endif %}
+                    <input type="file" id="deputy_photo_file" name="deputy_photo_file" accept=".jpg,.jpeg,.png,.gif,.webp,image/*">
+                    <p class="admin-form-hint">Optional. Upload only if this person's photo is not already available in the staff list.</p>
+                </div>
+                <div></div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="coordinator_en">Project Coordinator EN</label>
+                    <input type="text" id="coordinator_en" name="coordinator_en" value="{{ editing_project['coordinator_en'] if editing_project else '' }}">
                 </div>
                 <div>
-                    <label for="researcher_th">Researcher TH</label>
-                    <input type="text" id="researcher_th" name="researcher_th" value="{{ editing_project['researcher_th'] if editing_project else '' }}">
+                    <label for="coordinator_th">Project Coordinator TH</label>
+                    <input type="text" id="coordinator_th" name="coordinator_th" value="{{ editing_project['coordinator_th'] if editing_project else '' }}">
                 </div>
             </div>
 
             <div class="admin-form-grid admin-form-grid-two">
                 <div>
-                    <label for="engineer_en">Project Engineer EN</label>
-                    <input type="text" id="engineer_en" name="engineer_en" value="{{ editing_project['engineer_en'] if editing_project else '' }}">
+                    <label for="coordinator_photo_file">Project Coordinator Photo</label>
+                    {% if editing_project and editing_project['coordinator_photo_filename'] %}
+                        <p class="admin-current-file">Current photo: {{ editing_project['coordinator_photo_filename'] }}</p>
+                    {% endif %}
+                    <input type="file" id="coordinator_photo_file" name="coordinator_photo_file" accept=".jpg,.jpeg,.png,.gif,.webp,image/*">
+                    <p class="admin-form-hint">Optional. Upload only if this person's photo is not already available in the staff list.</p>
+                </div>
+                <div></div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="advisor_en">Project Advisor EN</label>
+                    <input type="text" id="advisor_en" name="advisor_en" value="{{ editing_project['advisor_en'] if editing_project else '' }}">
                 </div>
                 <div>
-                    <label for="engineer_th">Project Engineer TH</label>
-                    <input type="text" id="engineer_th" name="engineer_th" value="{{ editing_project['engineer_th'] if editing_project else '' }}">
+                    <label for="advisor_th">Project Advisor TH</label>
+                    <input type="text" id="advisor_th" name="advisor_th" value="{{ editing_project['advisor_th'] if editing_project else '' }}">
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="advisor_photo_file">Project Advisor Photo</label>
+                    {% if editing_project and editing_project['advisor_photo_filename'] %}
+                        <p class="admin-current-file">Current photo: {{ editing_project['advisor_photo_filename'] }}</p>
+                    {% endif %}
+                    <input type="file" id="advisor_photo_file" name="advisor_photo_file" accept=".jpg,.jpeg,.png,.gif,.webp,image/*">
+                    <p class="admin-form-hint">Optional. Upload only if this person's photo is not already available in the staff list.</p>
+                </div>
+                <div></div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="researcher_en">Researchers EN</label>
+                    <textarea id="researcher_en" name="researcher_en" rows="5">{{ editing_project['researcher_en'] if editing_project else '' }}</textarea>
+                    <small>Enter one researcher per line. Matching names from the staff list will automatically show their photos on the detail page.</small>
+                </div>
+                <div>
+                    <label for="researcher_th">Researchers TH</label>
+                    <textarea id="researcher_th" name="researcher_th" rows="5">{{ editing_project['researcher_th'] if editing_project else '' }}</textarea>
+                    <small>Enter one researcher per line. Matching names from the staff list will automatically show their photos on the detail page.</small>
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="engineer_en">Project Engineers EN</label>
+                    <textarea id="engineer_en" name="engineer_en" rows="5">{{ editing_project['engineer_en'] if editing_project else '' }}</textarea>
+                    <small>Enter one project engineer per line.</small>
+                </div>
+                <div>
+                    <label for="engineer_th">Project Engineers TH</label>
+                    <textarea id="engineer_th" name="engineer_th" rows="5">{{ editing_project['engineer_th'] if editing_project else '' }}</textarea>
+                    <small>Enter one project engineer per line.</small>
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="assistant_en">Research Assistants EN</label>
+                    <textarea id="assistant_en" name="assistant_en" rows="4">{{ editing_project['assistant_en'] if editing_project else '' }}</textarea>
+                    <small>Enter one research assistant per line.</small>
+                </div>
+                <div>
+                    <label for="assistant_th">Research Assistants TH</label>
+                    <textarea id="assistant_th" name="assistant_th" rows="4">{{ editing_project['assistant_th'] if editing_project else '' }}</textarea>
+                    <small>Enter one research assistant per line.</small>
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="lead_unit_en">Lead Unit EN</label>
+                    <input type="text" id="lead_unit_en" name="lead_unit_en" value="{{ editing_project['lead_unit_en'] if editing_project else '' }}">
+                </div>
+                <div>
+                    <label for="lead_unit_th">Lead Unit TH</label>
+                    <input type="text" id="lead_unit_th" name="lead_unit_th" value="{{ editing_project['lead_unit_th'] if editing_project else '' }}">
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="partner_en">Partner Organisations EN</label>
+                    <textarea id="partner_en" name="partner_en" rows="5">{{ editing_project['partner_en'] if editing_project else '' }}</textarea>
+                    <small>Enter one partner organisation per line.</small>
+                </div>
+                <div>
+                    <label for="partner_th">Partner Organisations TH</label>
+                    <textarea id="partner_th" name="partner_th" rows="5">{{ editing_project['partner_th'] if editing_project else '' }}</textarea>
+                    <small>Enter one partner organisation per line.</small>
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="funding_en">Funding Source EN</label>
+                    <input type="text" id="funding_en" name="funding_en" value="{{ editing_project['funding_en'] if editing_project else '' }}">
+                </div>
+                <div>
+                    <label for="funding_th">Funding Source TH</label>
+                    <input type="text" id="funding_th" name="funding_th" value="{{ editing_project['funding_th'] if editing_project else '' }}">
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="budget_en">Budget EN</label>
+                    <input type="text" id="budget_en" name="budget_en" value="{{ editing_project['budget_en'] if editing_project else '' }}">
+                </div>
+                <div>
+                    <label for="budget_th">Budget TH</label>
+                    <input type="text" id="budget_th" name="budget_th" value="{{ editing_project['budget_th'] if editing_project else '' }}">
+                </div>
+            </div>
+
+            <div class="admin-form-grid admin-form-grid-two">
+                <div>
+                    <label for="collaboration_details_en">Collaboration Details EN</label>
+                    <textarea id="collaboration_details_en" name="collaboration_details_en" rows="6">{{ editing_project['collaboration_details_en'] if editing_project else '' }}</textarea>
+                </div>
+                <div>
+                    <label for="collaboration_details_th">Collaboration Details TH</label>
+                    <textarea id="collaboration_details_th" name="collaboration_details_th" rows="6">{{ editing_project['collaboration_details_th'] if editing_project else '' }}</textarea>
                 </div>
             </div>
 
             <div class="admin-form-grid admin-form-grid-two">
                 <div>
                     <label for="description_en">Project Description EN</label>
-                    <textarea id="description_en" name="description_en" rows="8">{{ editing_project['description_en'] if editing_project else '' }}</textarea>
+                    <textarea id="description_en" name="description_en" rows="8" required>{{ editing_project['description_en'] if editing_project else '' }}</textarea>
                 </div>
                 <div>
                     <label for="description_th">Project Description TH</label>
-                    <textarea id="description_th" name="description_th" rows="8">{{ editing_project['description_th'] if editing_project else '' }}</textarea>
+                    <textarea id="description_th" name="description_th" rows="8" required>{{ editing_project['description_th'] if editing_project else '' }}</textarea>
                 </div>
             </div>
+
+            <section class="admin-dynamic-section">
+                <div class="admin-dynamic-header">
+                    <div>
+                        <h2>Custom Project Team Fields</h2>
+                        <p>Add extra one-person roles here. Each card below lets you define the role label, the person's name, and an optional photo for the Project Team section.</p>
+                        <p class="admin-form-hint">Click the button on the right to add custom Project Team fields.</p>
+                    </div>
+                    <button type="button" class="admin-action-button" data-add-custom-team data-collapsed-label="Add Team Field" data-expanded-label="Add Another Team Field">Add Team Field</button>
+                </div>
+                <div class="admin-dynamic-list" data-custom-team-list hidden></div>
+            </section>
+
+            <section class="admin-dynamic-section">
+                <div class="admin-dynamic-header">
+                    <div>
+                        <h2>Custom Other Project Detail Fields</h2>
+                        <p>Use the cards below to add both a field name and its content. These entries will appear inside Other Project Details on the project detail page.</p>
+                        <p class="admin-form-hint">Click the button on the right to add custom Other Project Detail fields.</p>
+                    </div>
+                    <button type="button" class="admin-action-button" data-add-custom-detail data-collapsed-label="Add Detail Field" data-expanded-label="Add Another Detail Field">Add Detail Field</button>
+                </div>
+                <div class="admin-dynamic-list" data-custom-detail-list hidden></div>
+            </section>
 
             <div class="admin-form-actions">
                 <button type="submit">{% if editing_project %}Update Project{% else %}Add Project{% endif %}</button>
@@ -130,7 +309,7 @@
                     <article class="staff-admin-card">
                         <div class="project-admin-topline">
                             <span class="project-admin-type {% if project['project_type'] == 'ongoing' %}ongoing-pill{% else %}finished-pill{% endif %}">{{ project['project_type']|capitalize }}</span>
-                            <span class="project-admin-year">{{ project['year_en'] or '-' }}</span>
+                            <span class="project-admin-year">{{ project['duration_en'] or project['year_en'] or '-' }}</span>
                         </div>
                         <h3>{{ project['title_en'] }}</h3>
                         {% if project['project_type'] == 'ongoing' and project['leader_en'] %}
@@ -149,5 +328,250 @@
             </div>
         </section>
     </main>
+    <script id="custom-team-fields-data" type="application/json">{{ editing_custom_team_fields|tojson }}</script>
+    <script id="custom-detail-fields-data" type="application/json">{{ editing_custom_detail_fields|tojson }}</script>
+    <script>
+        (() => {
+            const teamList = document.querySelector('[data-custom-team-list]');
+            const detailList = document.querySelector('[data-custom-detail-list]');
+            const addTeamButton = document.querySelector('[data-add-custom-team]');
+            const addDetailButton = document.querySelector('[data-add-custom-detail]');
+
+            const teamInitialData = JSON.parse(document.getElementById('custom-team-fields-data').textContent || '[]');
+            const detailInitialData = JSON.parse(document.getElementById('custom-detail-fields-data').textContent || '[]');
+
+            function createInput({ name, value = '', placeholder = '', rows = 3, type = 'textarea' }) {
+                if (type === 'input') {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.name = name;
+                    input.value = value;
+                    input.placeholder = placeholder;
+                    return input;
+                }
+
+                const textarea = document.createElement('textarea');
+                textarea.name = name;
+                textarea.rows = rows;
+                textarea.placeholder = placeholder;
+                textarea.value = value;
+                return textarea;
+            }
+
+            function createRemoveButton() {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'link-button';
+                button.textContent = 'Delete This Field';
+                button.addEventListener('click', () => {
+                    const card = button.closest('.admin-dynamic-card');
+                    const list = card?.parentElement;
+                    card?.remove();
+
+                    if (list === teamList) {
+                        syncDynamicSectionState(teamList, addTeamButton);
+                    } else if (list === detailList) {
+                        syncDynamicSectionState(detailList, addDetailButton);
+                    }
+                });
+                return button;
+            }
+
+            function syncDynamicSectionState(listElement, buttonElement) {
+                if (!listElement || !buttonElement) {
+                    return;
+                }
+
+                const hasItems = listElement.children.length > 0;
+
+                if (hasItems) {
+                    listElement.removeAttribute('hidden');
+                    buttonElement.classList.add('is-expanded');
+                    buttonElement.textContent = buttonElement.dataset.expandedLabel || buttonElement.textContent;
+                } else {
+                    listElement.setAttribute('hidden', '');
+                    buttonElement.classList.remove('is-expanded');
+                    buttonElement.textContent = buttonElement.dataset.collapsedLabel || buttonElement.textContent;
+                }
+            }
+
+            function openDynamicSection(listElement, buttonElement) {
+                listElement?.removeAttribute('hidden');
+                syncDynamicSectionState(listElement, buttonElement);
+            }
+
+            function renderCustomTeamField(field = {}) {
+                const card = document.createElement('div');
+                card.className = 'admin-dynamic-card';
+
+                const actions = document.createElement('div');
+                actions.className = 'admin-dynamic-actions';
+                actions.appendChild(createRemoveButton());
+
+                const grid = document.createElement('div');
+                grid.className = 'admin-form-grid admin-form-grid-two';
+
+                const labelEnWrap = document.createElement('div');
+                const labelEn = document.createElement('label');
+                labelEn.textContent = 'Field Label EN';
+                labelEnWrap.appendChild(labelEn);
+                labelEnWrap.appendChild(createInput({
+                    name: 'custom_team_label_en[]',
+                    value: field.label_en || '',
+                    placeholder: 'ex. Project Liaison',
+                }));
+
+                const labelThWrap = document.createElement('div');
+                const labelTh = document.createElement('label');
+                labelTh.textContent = 'Field Label TH';
+                labelThWrap.appendChild(labelTh);
+                labelThWrap.appendChild(createInput({
+                    name: 'custom_team_label_th[]',
+                    value: field.label_th || '',
+                    placeholder: 'ex. ผู้ประสานงานภาคสนาม',
+                }));
+
+                const valueEnWrap = document.createElement('div');
+                const valueEn = document.createElement('label');
+                valueEn.textContent = 'Person Name EN';
+                valueEnWrap.appendChild(valueEn);
+                valueEnWrap.appendChild(createInput({
+                    name: 'custom_team_value_en[]',
+                    value: field.value_en || '',
+                    placeholder: 'ex. Dr. Example Name',
+                }));
+
+                const valueThWrap = document.createElement('div');
+                const valueTh = document.createElement('label');
+                valueTh.textContent = 'Person Name TH';
+                valueThWrap.appendChild(valueTh);
+                valueThWrap.appendChild(createInput({
+                    name: 'custom_team_value_th[]',
+                    value: field.value_th || '',
+                    placeholder: 'ex. ดร. ตัวอย่าง',
+                }));
+
+                grid.append(labelEnWrap, labelThWrap, valueEnWrap, valueThWrap);
+
+                const photoWrap = document.createElement('div');
+                photoWrap.className = 'admin-form-grid';
+                const hiddenPhoto = document.createElement('input');
+                hiddenPhoto.type = 'hidden';
+                hiddenPhoto.name = 'custom_team_existing_photo[]';
+                hiddenPhoto.value = field.photo_filename || '';
+                photoWrap.appendChild(hiddenPhoto);
+
+                const photoLabel = document.createElement('label');
+                photoLabel.textContent = 'Photo';
+                photoWrap.appendChild(photoLabel);
+
+                if (field.photo_filename) {
+                    const currentPhoto = document.createElement('p');
+                    currentPhoto.className = 'admin-current-file';
+                    currentPhoto.textContent = `Current photo: ${field.photo_filename}`;
+                    photoWrap.appendChild(currentPhoto);
+                }
+
+                const photoInput = document.createElement('input');
+                photoInput.type = 'file';
+                photoInput.name = 'custom_team_photo_file[]';
+                photoInput.accept = '.jpg,.jpeg,.png,.gif,.webp,image/*';
+                photoWrap.appendChild(photoInput);
+
+                const photoHint = document.createElement('p');
+                photoHint.className = 'admin-form-hint';
+                photoHint.textContent = "Optional. Upload only if this person's photo is not already available in the staff list.";
+                photoWrap.appendChild(photoHint);
+
+                card.append(actions, grid, photoWrap);
+                teamList?.appendChild(card);
+            }
+
+            function renderCustomDetailField(field = {}) {
+                const card = document.createElement('div');
+                card.className = 'admin-dynamic-card';
+
+                const actions = document.createElement('div');
+                actions.className = 'admin-dynamic-actions';
+                actions.appendChild(createRemoveButton());
+
+                const grid = document.createElement('div');
+                grid.className = 'admin-form-grid admin-form-grid-two';
+
+                const labelEnWrap = document.createElement('div');
+                const labelEn = document.createElement('label');
+                labelEn.textContent = 'Field Label EN';
+                labelEnWrap.appendChild(labelEn);
+                labelEnWrap.appendChild(createInput({
+                    name: 'custom_detail_label_en[]',
+                    value: field.label_en || '',
+                    placeholder: 'ex. Project Website',
+                }));
+
+                const labelThWrap = document.createElement('div');
+                const labelTh = document.createElement('label');
+                labelTh.textContent = 'Field Label TH';
+                labelThWrap.appendChild(labelTh);
+                labelThWrap.appendChild(createInput({
+                    name: 'custom_detail_label_th[]',
+                    value: field.label_th || '',
+                    placeholder: 'ex. เว็บไซต์โครงการ',
+                }));
+
+                const valueEnWrap = document.createElement('div');
+                const valueEn = document.createElement('label');
+                valueEn.textContent = 'Content EN';
+                valueEnWrap.appendChild(valueEn);
+                valueEnWrap.appendChild(createInput({
+                    name: 'custom_detail_value_en[]',
+                    value: field.value_en || '',
+                    placeholder: 'ex. https://example.com',
+                    rows: 4,
+                }));
+
+                const valueThWrap = document.createElement('div');
+                const valueTh = document.createElement('label');
+                valueTh.textContent = 'Content TH';
+                valueThWrap.appendChild(valueTh);
+                valueThWrap.appendChild(createInput({
+                    name: 'custom_detail_value_th[]',
+                    value: field.value_th || '',
+                    placeholder: 'ex. https://example.com',
+                    rows: 4,
+                }));
+
+                grid.append(labelEnWrap, labelThWrap, valueEnWrap, valueThWrap);
+
+                card.append(actions, grid);
+                detailList?.appendChild(card);
+            }
+
+            addTeamButton?.addEventListener('click', () => {
+                openDynamicSection(teamList, addTeamButton);
+                renderCustomTeamField();
+                syncDynamicSectionState(teamList, addTeamButton);
+            });
+
+            addDetailButton?.addEventListener('click', () => {
+                openDynamicSection(detailList, addDetailButton);
+                renderCustomDetailField();
+                syncDynamicSectionState(detailList, addDetailButton);
+            });
+
+            if (teamInitialData.length) {
+                teamInitialData.forEach(renderCustomTeamField);
+                openDynamicSection(teamList, addTeamButton);
+            } else {
+                syncDynamicSectionState(teamList, addTeamButton);
+            }
+
+            if (detailInitialData.length) {
+                detailInitialData.forEach(renderCustomDetailField);
+                openDynamicSection(detailList, addDetailButton);
+            } else {
+                syncDynamicSectionState(detailList, addDetailButton);
+            }
+        })();
+    </script>
 </body>
 </html>

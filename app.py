@@ -1,4 +1,5 @@
-import os
+﻿import os
+import re
 from datetime import timedelta
 
 from flask import Flask, session, request
@@ -7,6 +8,10 @@ from flask import Flask, session, request
 from database import (
     DATABASE_PATH,
     get_db_connection,
+    get_staff_photo_lookup,
+    build_staff_scopus_url,
+    normalize_project_person_name,
+    parse_project_custom_fields,
     ensure_default_general_info,
     ensure_default_staff,
     ensure_default_projects,
@@ -47,6 +52,7 @@ app.config["DATABASE"] = str(DATABASE_PATH)
 @app.context_processor
 def inject_template_helpers():
     current_language = session.get("language", "en")
+    staff_photo_lookup_cache = None
 
     # 根據目前語言設定，自動從 *_en / *_th 欄位中取出對應內容。
     # 如果目前語言的欄位是空的，會自動退回另一種語言，避免畫面整塊空白。
@@ -131,11 +137,143 @@ def inject_template_helpers():
 
         return image_options.get(current_language) or image_options.get("en")
 
+    def text_lines(raw_text):
+        if not raw_text:
+            return []
+
+        lines = []
+        for line in str(raw_text).splitlines():
+            cleaned_line = line.strip()
+            if cleaned_line:
+                lines.append(cleaned_line)
+
+        return lines
+
+    def parse_people_entries(raw_text):
+        if not raw_text:
+            return []
+
+        entries = []
+        for raw_line in str(raw_text).splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+
+            if line.startswith("("):
+                closing_index = line.find(")")
+                if closing_index != -1:
+                    heading = line[:closing_index + 1].strip().rstrip(";")
+                    if heading:
+                        entries.append({"type": "heading", "text": heading})
+
+                    remainder = line[closing_index + 1:].strip(" ;,")
+                    if remainder:
+                        for part in [item.strip() for item in re.split(r"[;,]", remainder) if item.strip()]:
+                            entries.append({"type": "person", "name": part})
+                    continue
+
+            for part in [item.strip() for item in re.split(r"[;,]", line) if item.strip()]:
+                entries.append({"type": "person", "name": part})
+
+        return entries
+
+    def photo_for_person(name, override_filename=""):
+        nonlocal staff_photo_lookup_cache
+
+        if override_filename:
+            return override_filename
+
+        if not name:
+            return ""
+
+        if staff_photo_lookup_cache is None:
+            staff_photo_lookup_cache = get_staff_photo_lookup()
+
+        normalized_name = normalize_project_person_name(name)
+        matched_staff = staff_photo_lookup_cache.get(normalized_name)
+        if matched_staff:
+            return matched_staff["photo_filename"] or ""
+
+        return ""
+
+    def staff_scopus_url(staff):
+        return build_staff_scopus_url(staff)
+
+    def project_people_entries(project, field_name):
+        raw_text = field_text(project, field_name)
+        entries = []
+        for entry in parse_people_entries(raw_text):
+            if entry["type"] == "heading":
+                entries.append(entry)
+            else:
+                entries.append({
+                    "type": "person",
+                    "name": entry["name"],
+                    "photo_filename": photo_for_person(entry["name"]),
+                })
+
+        return entries
+
+    def project_custom_team_fields(project):
+        raw_fields = ""
+        try:
+            raw_fields = project["custom_team_fields_json"]
+        except (KeyError, TypeError, IndexError):
+            raw_fields = ""
+
+        entries = []
+        for field in parse_project_custom_fields(raw_fields):
+            label = field.get(primary_key("label", current_language)) or field.get(fallback_key("label", current_language)) or ""
+            value = field.get(primary_key("value", current_language)) or field.get(fallback_key("value", current_language)) or ""
+            if not label and not value:
+                continue
+
+            entries.append({
+                "label": label,
+                "value": value,
+                "photo_filename": photo_for_person(value, field.get("photo_filename", "")),
+            })
+
+        return entries
+
+    def project_custom_detail_fields(project):
+        raw_fields = ""
+        try:
+            raw_fields = project["custom_detail_fields_json"]
+        except (KeyError, TypeError, IndexError):
+            raw_fields = ""
+
+        entries = []
+        for field in parse_project_custom_fields(raw_fields):
+            label = field.get(primary_key("label", current_language)) or field.get(fallback_key("label", current_language)) or ""
+            value = field.get(primary_key("value", current_language)) or field.get(fallback_key("value", current_language)) or ""
+            if not label and not value:
+                continue
+
+            entries.append({
+                "label": label,
+                "value": value,
+            })
+
+        return entries
+
+    def primary_key(prefix, language):
+        return f"{prefix}_{language}"
+
+    def fallback_key(prefix, language):
+        return f"{prefix}_{'th' if language == 'en' else 'en'}"
+
     return {
         "current_language": current_language,
         "field_text": field_text,
         "format_general_content": format_general_content,
         "overview_image_for_title": overview_image_for_title,
+        "text_lines": text_lines,
+        "photo_for_person": photo_for_person,
+        "staff_scopus_url": staff_scopus_url,
+        "project_people_entries": project_people_entries,
+        "project_custom_team_fields": project_custom_team_fields,
+        "project_custom_detail_fields": project_custom_detail_fields,
         "current_path": request.path,
     }
 
@@ -151,6 +289,7 @@ def test_db_connection():
         return False
 
 
+
 def initialize_app_data():
     if test_db_connection():
         print("SQLite 資料庫連線成功")
@@ -162,7 +301,6 @@ def initialize_app_data():
         ensure_admin_table()  # 確保 admin 表存在，讓新環境至少有可登入的預設管理帳號
     else:
         print("SQLite 資料庫連線失敗，請先檢查 scem.db 是否存在")
-
 
 
 # 註冊前台、登入驗證、後台管理三組路由

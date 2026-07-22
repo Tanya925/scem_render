@@ -138,8 +138,9 @@
                                 {% set position_text = field_text(staff, 'position') %}
                                 {% set department_text = field_text(staff, 'department') %}
                                 {% set audio_url = staff['audio_th_url'] if current_language == 'th' else staff['audio_en_url'] %}
+                                {% set scopus_url = staff['scopus_url'] if staff['scopus_url'] else staff_scopus_url(staff) %}
                                 <article
-                                    class="public-staff-card {% if staff['profile_url'] %}has-profile-link{% else %}is-static{% endif %} reveal-card"
+                                    class="public-staff-card {% if staff['profile_url'] or scopus_url %}has-profile-link{% else %}is-static{% endif %} reveal-card"
                                     data-staff-card
                                     data-position="{{ (staff['position_en'] or staff['position_th'] or '')|lower }}"
                                     data-department="{{ (staff['department_en'] or staff['department_th'] or '')|lower }}"
@@ -147,10 +148,42 @@
                                     style="--reveal-delay: {{ loop.index0 * 60 }}ms;"
                                 >
                                     <div class="public-staff-card-top">
-                                        <span class="public-staff-category">{{ position_text }}</span>
+                                        {% if scopus_url %}
+                                            <a
+                                                class="public-staff-scopus-button"
+                                                href="{{ scopus_url }}"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                aria-label="Open Scopus profile for {{ field_text(staff, 'name') }}"
+                                            >
+                                                <span class="public-staff-scopus-label">Scopus</span>
+                                                <span class="public-staff-scopus-metric">{% if current_language == "th" %}ดัชนี h{% else %}h-index{% endif %}: {{ staff['scopus_hindex'] if staff['scopus_hindex'] is not none else 'N/A' }}</span>
+                                            </a>
+                                        {% endif %}
                                     </div>
 
                                     <div class="public-staff-photo-shell">
+                                        <svg
+                                            class="public-staff-category-arc"
+                                            viewBox="0 0 320 320"
+                                            aria-hidden="true"
+                                            focusable="false"
+                                        >
+                                            <defs>
+                                                <path
+                                                    id="staff-category-arc-{{ section['key'] }}-{{ loop.index0 }}"
+                                                    d="M 10 80 A 156 156 0 0 1 200 4"
+                                                />
+                                            </defs>
+                                            <text class="public-staff-category">
+                                                <textPath
+                                                    href="#staff-category-arc-{{ section['key'] }}-{{ loop.index0 }}"
+                                                    startOffset="14%"
+                                                >
+                                                    {{ position_text }}
+                                                </textPath>
+                                            </text>
+                                        </svg>
                                         <div class="public-staff-photo">
                                             {% if staff['photo_filename'] %}
                                                 <img src="{{ url_for('static', filename='uploads/' ~ staff['photo_filename']) }}" alt="{{ field_text(staff, 'name') }}">
