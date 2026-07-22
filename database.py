@@ -914,12 +914,26 @@ def ensure_default_staff():
     ensure_staff_directory_columns()
 
     connection = get_db_connection()
+    existing_staff_rows = connection.execute(
+        "SELECT id, name_en, name_th FROM staff"
+    ).fetchall()
 
     for staff in DEFAULT_STAFF:
-        existing_staff = connection.execute(
-            "SELECT id FROM staff WHERE name_en = ?",
-            (staff["name_en"],)
-        ).fetchone()
+        normalized_default_name_en = normalize_project_person_name(staff["name_en"])
+        normalized_default_name_th = normalize_project_person_name(staff["name_th"])
+        existing_staff = None
+
+        for existing_row in existing_staff_rows:
+            normalized_existing_name_en = normalize_project_person_name(existing_row["name_en"])
+            normalized_existing_name_th = normalize_project_person_name(existing_row["name_th"])
+
+            if normalized_default_name_en and normalized_default_name_en == normalized_existing_name_en:
+                existing_staff = existing_row
+                break
+
+            if normalized_default_name_th and normalized_default_name_th == normalized_existing_name_th:
+                existing_staff = existing_row
+                break
 
         if existing_staff is not None:
             continue
@@ -960,6 +974,9 @@ def ensure_default_staff():
                 staff.get("audio_th_url", ""),
             )
         )
+        existing_staff_rows = connection.execute(
+            "SELECT id, name_en, name_th FROM staff"
+        ).fetchall()
 
     connection.commit()
 
